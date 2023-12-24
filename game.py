@@ -1,9 +1,10 @@
+import sys
 import pygame
 from pygame.locals import *
 
 pygame.init()
 infoObject = pygame.display.Info()
-screen = pygame.display.set_mode((1920, 1080))  # Полный экран
+screen = pygame.display.set_mode((1920, 1080))  # Full Hd экран
 pygame.display.set_caption('Ритм Игра')
 FPS = 100
 clock = pygame.time.Clock()
@@ -29,6 +30,9 @@ class Game:
         # pygame.display.update()
         pygame.display.flip()
 
+    def exit(self):
+        sys.exit(0)
+
 
 if __name__ == '__main__':
     running = True
@@ -45,6 +49,8 @@ if __name__ == '__main__':
                 if game.scene == 0:
                     if 805 <= mouse[0] <= 1115 and 595 <= mouse[1] <= 720:  # MainMenu --> ChoiceMenu
                         game.ChoiceMenu()
+                    if 70 <= mouse[0] <= 335 and 40 <= mouse[1] <= 108:  # MainMenu --> ChoiceMenu
+                        game.exit()
                 elif game.scene == 1:
                     if 57 <= mouse[0] <= 345 and 45 <= mouse[1] <= 110:  # ChoiceMenu --> MainMenu
                         game.MainMenu()
