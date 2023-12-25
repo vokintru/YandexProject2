@@ -1,9 +1,11 @@
 import sys
+import time
 import pygame
 import pickledb
 from pygame.locals import *
 
 pygame.init()
+pygame.joystick.init()
 infoObject = pygame.display.Info()
 screen = pygame.display.set_mode((1920, 1080))  # Full Hd экран
 pygame.display.set_caption('Ритм Игра')
@@ -120,19 +122,30 @@ class Game:
 
             # change
             if 950 <= mouse[0] <= 1245 and 235 <= mouse[1] <= 565:
+                img = pygame.image.load(f"gameFiles/img/wait_for_input.png")
                 if 235 <= mouse[1] <= 300:
+                    screen.blit(img, (954, 235))
+                    pygame.display.flip()
                     if Settings.change_key(self.self_settings, 1):
                         self.SettingsMenu()
-                elif 300 <= mouse[1] <= 368:
+                elif 305 <= mouse[1] <= 368:
+                    screen.blit(img, (954, 305))
+                    pygame.display.flip()
                     if Settings.change_key(self.self_settings, 2):
                         self.SettingsMenu()
                 elif 375 <= mouse[1] <= 440:
+                    screen.blit(img, (954, 375))
+                    pygame.display.flip()
                     if Settings.change_key(self.self_settings, 3):
                         self.SettingsMenu()
                 elif 445 <= mouse[1] <= 500:
+                    screen.blit(img, (954, 445))
+                    pygame.display.flip()
                     if Settings.change_key(self.self_settings, 4):
                         self.SettingsMenu()
                 elif 505 <= mouse[1] <= 565:
+                    screen.blit(img, (954, 505))
+                    pygame.display.flip()
                     if Settings.change_key(self.self_settings, "Over"):
                         self.SettingsMenu()
 
@@ -171,17 +184,55 @@ class Settings:
                 for event in events:
                     if event.type == pygame.KEYDOWN:
                         key = pygame.key.name(event.key)
-            print(key)
             self.settings.set(f"keyboard{track}", key)
         elif int(self.settings.get("input")) == 1:
-            pass
+            key = None
+            while key is None:
+                events = pygame.event.get()
+                for event in events:
+                    if event.type == pygame.JOYBUTTONDOWN:
+                        key = event.button
+                        print(key)
+                    if event.type == pygame.JOYAXISMOTION:
+                        print(event.axis)
+                        if event.axis == 4 or event.axis == 5:
+                            if event.axis == 4:
+                                key = "LT"
+                            elif event.axis == 5:
+                                key = "RT"
+                    if event.type == pygame.JOYHATMOTION:
+                        if event.value == (0, -1):
+                            key = "DOWN"
+                        elif event.value == (1, 0):
+                            key = "RIGHT"
+                        elif event.value == (-1, 0):
+                            key = "LEFT"
+                        elif event.value == (0, 1):
+                            key = "UP"
+            if key == 0:
+                key = "A"
+            elif key == 1:
+                key = "B"
+            elif key == 2:
+                key = "X"
+            elif key == 3:
+                key = "Y"
+            elif key == 4:
+                key = "LB"
+            elif key == 5:
+                key = "RB"
             self.settings.set(f"gamepad{track}", key)
         return True
 
 
-
-
 if __name__ == '__main__':
+    if pygame.joystick.get_count() >= 2:
+        print("Disconnect secont joystick")
+        time.sleep(5)
+        exit(0)
+    else:
+        joystick = pygame.joystick.Joystick(0)
+        joystick.init()
     running = True
     game = Game()
     game.MainMenu()
