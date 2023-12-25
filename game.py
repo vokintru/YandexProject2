@@ -117,9 +117,12 @@ class Game:
             if 48 <= mouse[0] <= 290 and 15 <= mouse[1] <= 80:  # MainMenu
                 game.MainMenu()
             if 950 <= mouse[0] <= 1245 and 140 <= mouse[1] <= 215:  # Change Input
-                Settings.input_device(self.self_settings, 1)
+                print(pygame.joystick.get_count())
                 if pygame.joystick.get_count() != 0:
                     Settings.input_device(self.self_settings, 1)
+                    self.SettingsMenu()
+                else:
+                    Settings.input_device(self.self_settings, 1, 0)
                     self.SettingsMenu()
 
             # change
@@ -237,8 +240,9 @@ if __name__ == '__main__':
         try:
             joystick = pygame.joystick.Joystick(0)
             joystick.init()
-        except pygame.error:
-            Settings.input_device(1, 0)
+        except Exception:
+            s = Settings()
+            Settings.input_device(s, 1, 0)
             print("Джостик не найден")
     running = True
     game = Game()
