@@ -118,7 +118,9 @@ class Game:
                 game.MainMenu()
             if 950 <= mouse[0] <= 1245 and 140 <= mouse[1] <= 215:  # Change Input
                 Settings.input_device(self.self_settings, 1)
-                self.SettingsMenu()
+                if pygame.joystick.get_count() != 0:
+                    Settings.input_device(self.self_settings, 1)
+                    self.SettingsMenu()
 
             # change
             if 950 <= mouse[0] <= 1245 and 235 <= mouse[1] <= 565:
@@ -157,16 +159,19 @@ class Settings:
     def __init__(self):
         self.settings = pickledb.load('gameFiles/settings.json', True)
 
-    def input_device(self, do=0):
+    def input_device(self, do=0, device=None):
         if do == 0:
             return int(self.settings.get("input"))
         elif do == 1:
-            now = int(self.settings.get("input"))
-            if now == 1:
-                self.settings.set("input", "0")
-            elif now == 0:
-                self.settings.set("input", "1")
-            return int(self.settings.get("input"))
+            if device is None:
+                now = int(self.settings.get("input"))
+                if now == 1:
+                    self.settings.set("input", "0")
+                elif now == 0:
+                    self.settings.set("input", "1")
+                return int(self.settings.get("input"))
+            else:
+                self.settings.set("input", f"{device}")
 
     def get(self, track):
         if int(self.settings.get("input")) == 0:
@@ -192,9 +197,7 @@ class Settings:
                 for event in events:
                     if event.type == pygame.JOYBUTTONDOWN:
                         key = event.button
-                        print(key)
                     if event.type == pygame.JOYAXISMOTION:
-                        print(event.axis)
                         if event.axis == 4 or event.axis == 5:
                             if event.axis == 4:
                                 key = "LT"
@@ -231,8 +234,12 @@ if __name__ == '__main__':
         time.sleep(5)
         exit(0)
     else:
-        joystick = pygame.joystick.Joystick(0)
-        joystick.init()
+        try:
+            joystick = pygame.joystick.Joystick(0)
+            joystick.init()
+        except pygame.error:
+            Settings.input_device(1, 0)
+            print("Джостик не найден")
     running = True
     game = Game()
     game.MainMenu()
