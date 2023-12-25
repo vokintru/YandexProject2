@@ -1,5 +1,6 @@
 import sys
 import pygame
+import pickledb
 from pygame.locals import *
 
 pygame.init()
@@ -13,9 +14,11 @@ clock = pygame.time.Clock()
 class Game:
     def __init__(self):
         self.scene = 0
+        self.font = pygame.font.Font(None, 36)
+        self.self_settings = Settings()
 
     def MainMenu(self):
-        img = pygame.image.load('gameFiles/img/MainMenu.png')
+        img = pygame.image.load('gameFiles/img/Menu/Main.png')
         screen.blit(img, (0, 0))
         self.scene = 0
 
@@ -23,15 +26,142 @@ class Game:
         pygame.display.flip()
 
     def ChoiceMenu(self):
-        img = pygame.image.load('gameFiles/img/ChoiceMenu.png')
+        img = pygame.image.load('gameFiles/img/Menu/Choice.png')
         screen.blit(img, (0, 0))
         self.scene = 1
 
         # pygame.display.update()
         pygame.display.flip()
 
+    def SettingsMenu(self):
+        img = pygame.image.load('gameFiles/img/Menu/Settings.png')
+        screen.blit(img, (0, 0))
+        self.scene = 2
+
+        # input
+        if Settings.input_device(self.self_settings) == 0:
+            text = self.font.render("Keyboard", True, (0, 0, 0))
+            screen.blit(text, (1015, 165))
+        elif Settings.input_device(self.self_settings) == 1:
+            text = self.font.render("Gamepad", True, (0, 0, 0))
+            screen.blit(text, (1015, 165))
+
+        # track 1
+
+        if Settings.input_device(self.self_settings) == 0:
+            text = self.font.render(Settings.get(self.self_settings, 1), True, (0, 0, 0))
+            screen.blit(text, (1024, 252))
+        elif Settings.input_device(self.self_settings) == 1:
+            img = pygame.image.load(f"gameFiles/img/GamepadKeys/{Settings.get(self.self_settings, 1)}.png")
+            screen.blit(img, (1060, 235))
+
+        # track 2
+
+        if Settings.input_device(self.self_settings) == 0:
+            text = self.font.render(Settings.get(self.self_settings, 2), True, (0, 0, 0))
+            screen.blit(text, (1024, 330))
+        elif Settings.input_device(self.self_settings) == 1:
+            img = pygame.image.load(f"gameFiles/img/GamepadKeys/{Settings.get(self.self_settings, 2)}.png")
+            screen.blit(img, (1060, 305))
+
+        # track 3
+
+        if Settings.input_device(self.self_settings) == 0:
+            text = self.font.render(Settings.get(self.self_settings, 3), True, (0, 0, 0))
+            screen.blit(text, (1024, 400))
+        elif Settings.input_device(self.self_settings) == 1:
+            img = pygame.image.load(f"gameFiles/img/GamepadKeys/{Settings.get(self.self_settings, 3)}.png")
+            screen.blit(img, (1060, 380))
+
+        # track 4
+
+        if Settings.input_device(self.self_settings) == 0:
+            text = self.font.render(Settings.get(self.self_settings, 4), True, (0, 0, 0))
+            screen.blit(text, (1024, 460))
+        elif Settings.input_device(self.self_settings) == 1:
+            img = pygame.image.load(f"gameFiles/img/GamepadKeys/{Settings.get(self.self_settings, 4)}.png")
+            screen.blit(img, (1060, 445))
+
+        # Overdrive
+
+        if Settings.input_device(self.self_settings) == 0:
+            text = self.font.render(Settings.get(self.self_settings, "Over"), True, (0, 0, 0))
+            screen.blit(text, (1024, 522))
+        elif Settings.input_device(self.self_settings) == 1:
+            img = pygame.image.load(f"gameFiles/img/GamepadKeys/{Settings.get(self.self_settings, 'Over')}.png")
+            screen.blit(img, (1060, 505))
+
+        # pygame.display.update()
+        pygame.display.flip()
+
+    def check_buttons(self):
+        if game.scene == 0:  # MainMenu
+            if 805 <= mouse[0] <= 1115 and 595 <= mouse[1] <= 720:  # ChoiceMenu
+                game.ChoiceMenu()
+            if 1640 <= mouse[0] <= 1910 and 35 <= mouse[1] <= 90:  # SettingsMenu
+                game.SettingsMenu()
+            if 70 <= mouse[0] <= 335 and 40 <= mouse[1] <= 108:  # Exit
+                game.exit()
+        elif game.scene == 1:  # ChoiceMenu
+            if 57 <= mouse[0] <= 345 and 45 <= mouse[1] <= 110:  # MainMenu
+                game.MainMenu()
+            if 725 <= mouse[0] <= 1065 and 410 <= mouse[1] <= 475:  # LvL1
+                print("LvL1 Start")
+            if 725 <= mouse[0] <= 1065 and 485 <= mouse[1] <= 555:  # LvL2
+                print("LvL2 Start")
+            if 725 <= mouse[0] <= 1065 and 565 <= mouse[1] <= 635:  # Custom LvL
+                print("Custom LvL Start")
+        elif game.scene == 2:
+            if 48 <= mouse[0] <= 290 and 15 <= mouse[1] <= 80:  # MainMenu
+                game.MainMenu()
+            if 950 <= mouse[0] <= 1245 and 140 <= mouse[1] <= 215:  # Change Input
+                Settings.input_device(self.self_settings, 1)
+                self.SettingsMenu()
+
+            # change
+            if 950 <= mouse[0] <= 1245 and 235 <= mouse[1] <= 565:
+                if Settings.input_device(self.self_settings, 0) == 0:
+                    if 235 <= mouse[1] <= 300:
+                        print(1)
+
+                elif Settings.input_device(self.self_settings, 0) == 1:
+                    if 235 <= mouse[1] <= 300:
+                        print(1)
+
     def exit(self):
         sys.exit(0)
+
+
+class Settings:
+    def __init__(self):
+        self.settings = pickledb.load('gameFiles/settings.json', True)
+
+    def input_device(self, do=0):
+        if do == 0:
+            return int(self.settings.get("input"))
+        elif do == 1:
+            now = int(self.settings.get("input"))
+            if now == 1:
+                self.settings.set("input", "0")
+            elif now == 0:
+                self.settings.set("input", "1")
+            return int(self.settings.get("input"))
+
+    def get(self, track):
+        if int(self.settings.get("input")) == 0:
+            x = self.settings.get(f"keyboard{track}")
+            return x.upper()
+        elif int(self.settings.get("input")) == 1:
+            x = self.settings.get(f"gamepad{track}")
+            return x.upper()
+
+    def change_key(self, track, key):
+        if int(self.settings.get("input")) == 0:
+            self.settings.set(f"keyboard{track}", key)
+        elif int(self.settings.get("input")) == 1:
+            self.settings.set(f"gamepad{track}", key)
+
+
 
 
 if __name__ == '__main__':
@@ -45,20 +175,8 @@ if __name__ == '__main__':
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse = pygame.mouse.get_pos()
-                #print(mouse)
-                if game.scene == 0:
-                    if 805 <= mouse[0] <= 1115 and 595 <= mouse[1] <= 720:  # MainMenu --> ChoiceMenu
-                        game.ChoiceMenu()
-                    if 70 <= mouse[0] <= 335 and 40 <= mouse[1] <= 108:  # MainMenu --> ChoiceMenu
-                        game.exit()
-                elif game.scene == 1:
-                    if 57 <= mouse[0] <= 345 and 45 <= mouse[1] <= 110:  # ChoiceMenu --> MainMenu
-                        game.MainMenu()
-                    if 725 <= mouse[0] <= 1065 and 410 <= mouse[1] <= 475:  # ChoiceMenu --> LvL1
-                        print("LvL1 Start")
-                    if 725 <= mouse[0] <= 1065 and 485 <= mouse[1] <= 555:  # ChoiceMenu --> LvL2
-                        print("LvL2 Start")
-                    if 725 <= mouse[0] <= 1065 and 565 <= mouse[1] <= 635:  # ChoiceMenu --> Custom LvL
-                        print("Custom LvL Start")
+                # print(mouse)
+                game.check_buttons()
+
         clock.tick(FPS)
     pygame.quit()
