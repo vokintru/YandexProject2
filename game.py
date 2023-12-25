@@ -120,13 +120,21 @@ class Game:
 
             # change
             if 950 <= mouse[0] <= 1245 and 235 <= mouse[1] <= 565:
-                if Settings.input_device(self.self_settings, 0) == 0:
-                    if 235 <= mouse[1] <= 300:
-                        print(1)
-
-                elif Settings.input_device(self.self_settings, 0) == 1:
-                    if 235 <= mouse[1] <= 300:
-                        print(1)
+                if 235 <= mouse[1] <= 300:
+                    if Settings.change_key(self.self_settings, 1):
+                        self.SettingsMenu()
+                elif 300 <= mouse[1] <= 368:
+                    if Settings.change_key(self.self_settings, 2):
+                        self.SettingsMenu()
+                elif 375 <= mouse[1] <= 440:
+                    if Settings.change_key(self.self_settings, 3):
+                        self.SettingsMenu()
+                elif 445 <= mouse[1] <= 500:
+                    if Settings.change_key(self.self_settings, 4):
+                        self.SettingsMenu()
+                elif 505 <= mouse[1] <= 565:
+                    if Settings.change_key(self.self_settings, "Over"):
+                        self.SettingsMenu()
 
     def exit(self):
         sys.exit(0)
@@ -155,11 +163,20 @@ class Settings:
             x = self.settings.get(f"gamepad{track}")
             return x.upper()
 
-    def change_key(self, track, key):
+    def change_key(self, track):
         if int(self.settings.get("input")) == 0:
+            key = 0
+            while key == 0:
+                events = pygame.event.get()
+                for event in events:
+                    if event.type == pygame.KEYDOWN:
+                        key = pygame.key.name(event.key)
+            print(key)
             self.settings.set(f"keyboard{track}", key)
         elif int(self.settings.get("input")) == 1:
+            pass
             self.settings.set(f"gamepad{track}", key)
+        return True
 
 
 
