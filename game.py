@@ -97,16 +97,16 @@ class Window:
         pygame.display.flip()
 
     def check_buttons(self):
-        if window.scene == 0:  # MainMenu
+        if self.scene == 0:  # MainMenu
             if 805 <= mouse[0] <= 1115 and 595 <= mouse[1] <= 720:  # ChoiceMenu
-                window.ChoiceMenu()
+                self.ChoiceMenu()
             if 1640 <= mouse[0] <= 1910 and 35 <= mouse[1] <= 90:  # SettingsMenu
-                window.SettingsMenu()
+                self.SettingsMenu()
             if 70 <= mouse[0] <= 335 and 40 <= mouse[1] <= 108:  # Exit
-                window.exit()
-        elif window.scene == 1:  # ChoiceMenu
+                self.exit()
+        elif self.scene == 1:  # ChoiceMenu
             if 57 <= mouse[0] <= 345 and 45 <= mouse[1] <= 110:  # MainMenu
-                window.MainMenu()
+                self.MainMenu()
             if 725 <= mouse[0] <= 1065 and 410 <= mouse[1] <= 475:  # LvL1
                 print("LvL1 Start")
                 game = Game(self.self_settings, 1, [100, 500])
@@ -117,9 +117,11 @@ class Window:
                 game.start()
             if 725 <= mouse[0] <= 1065 and 565 <= mouse[1] <= 635:  # Custom LvL
                 print("Custom LvL Start")
-        elif window.scene == 2:
+                game = Game(self.self_settings, 3, [100, 500])
+                game.start()
+        elif self.scene == 2:
             if 48 <= mouse[0] <= 290 and 15 <= mouse[1] <= 80:  # MainMenu
-                window.MainMenu()
+                self.MainMenu()
             if 950 <= mouse[0] <= 1245 and 140 <= mouse[1] <= 215:  # Change Input
                 print(pygame.joystick.get_count())
                 if pygame.joystick.get_count() != 0:
@@ -241,25 +243,26 @@ class Note(pygame.sprite.Sprite):
         self.image = pygame.image.load('gameFiles/img/note1.png')
         self.rect = self.image.get_rect()
         if track == 1:
-            self.rect.x = 390
+            self.rect.x = 325
             self.rect.y = 5
         elif track == 2:
-            self.rect.x = 774
+            self.rect.x = 729
             self.rect.y = 5
         elif track == 3:
-            self.rect.x = 1158
+            self.rect.x = 1133
             self.rect.y = 5
         elif track == 4:
-            self.rect.x = 1542
+            self.rect.x = 1535
             self.rect.y = 5
 
     def update(self):
         self.rect.y += 3
 
 
-class Game:
+class Game(Window):
     def __init__(self, setting: Settings, lvl_number, notes_t: list):
 
+        super().__init__()
         self.colors = ['#00ff00', '#00ff00', '#00ff00', '#00ff00']
         self.setting = setting
         self.lvl_n = lvl_number
@@ -274,15 +277,15 @@ class Game:
             else:
                 self.colors[i] = '#00ff00'
 
-        pygame.draw.rect(screen, pygame.Color('#ffffff'), (384 - 10, 0, 100, 1080))
-        pygame.draw.rect(screen, pygame.Color('#ffffff'), (768 - 10, 0, 100, 1080))
-        pygame.draw.rect(screen, pygame.Color('#ffffff'), (1152 - 10, 0, 100, 1080))
-        pygame.draw.rect(screen, pygame.Color('#ffffff'), (1536 - 10, 0, 100, 1080))
+        pygame.draw.rect(screen, pygame.Color('#ffffff'), (304, 0, 100, 1080))
+        pygame.draw.rect(screen, pygame.Color('#ffffff'), (708, 0, 100, 1080))
+        pygame.draw.rect(screen, pygame.Color('#ffffff'), (1112, 0, 100, 1080))
+        pygame.draw.rect(screen, pygame.Color('#ffffff'), (1516, 0, 100, 1080))
 
-        pygame.draw.rect(screen, pygame.Color(self.colors[0]), (384 - 10, 1000, 100, 1080))
-        pygame.draw.rect(screen, pygame.Color(self.colors[1]), (768 - 10, 1000, 100, 1080))
-        pygame.draw.rect(screen, pygame.Color(self.colors[2]), (1152 - 10, 1000, 100, 1080))
-        pygame.draw.rect(screen, pygame.Color(self.colors[3]), (1536 - 10, 1000, 100, 1080))
+        pygame.draw.rect(screen, pygame.Color(self.colors[0]), (304, 1000, 100, 1080))
+        pygame.draw.rect(screen, pygame.Color(self.colors[1]), (708, 1000, 100, 1080))
+        pygame.draw.rect(screen, pygame.Color(self.colors[2]), (1112, 1000, 100, 1080))
+        pygame.draw.rect(screen, pygame.Color(self.colors[3]), (1516, 1000, 100, 1080))
 
     def start(self):
         s = 199
@@ -292,6 +295,8 @@ class Game:
                 if event.type == pygame.QUIT:
                     running = False
                 if event.type == pygame.KEYDOWN:
+                    if event.key == 27:
+                        running = False
                     for i in range(1, 5):
                         if pygame.key.name(event.key).upper() == self.setting.get(i):
                             self.status_track[i - 1] = True
@@ -313,6 +318,8 @@ class Game:
             self.draw()
             self.all_sprites.draw(screen)
             self.all_sprites.update()
+        self.ChoiceMenu()
+
 
     def on_click(self, track):
         pass
