@@ -13,7 +13,7 @@ FPS = 100
 clock = pygame.time.Clock()
 
 
-class Game:
+class MainMenu:
     def __init__(self):
         self.scene = 0
         self.font = pygame.font.Font(None, 36)
@@ -98,25 +98,25 @@ class Game:
 
     def check_buttons(self):
         if game.scene == 0:  # MainMenu
-            if 805 <= mouse[0] <= 1115 and 595 <= mouse[1] <= 720:  # ChoiceMenu
+            if 805 <= self.mouse[0] <= 1115 and 595 <= self.mouse[1] <= 720:  # ChoiceMenu
                 game.ChoiceMenu()
-            if 1640 <= mouse[0] <= 1910 and 35 <= mouse[1] <= 90:  # SettingsMenu
+            if 1640 <= self.mouse[0] <= 1910 and 35 <= self.mouse[1] <= 90:  # SettingsMenu
                 game.SettingsMenu()
-            if 70 <= mouse[0] <= 335 and 40 <= mouse[1] <= 108:  # Exit
+            if 70 <= self.mouse[0] <= 335 and 40 <= self.mouse[1] <= 108:  # Exit
                 game.exit()
         elif game.scene == 1:  # ChoiceMenu
-            if 57 <= mouse[0] <= 345 and 45 <= mouse[1] <= 110:  # MainMenu
+            if 57 <= self.mouse[0] <= 345 and 45 <= self.mouse[1] <= 110:  # MainMenu
                 game.MainMenu()
-            if 725 <= mouse[0] <= 1065 and 410 <= mouse[1] <= 475:  # LvL1
+            if 725 <= self.mouse[0] <= 1065 and 410 <= self.mouse[1] <= 475:  # LvL1
                 print("LvL1 Start")
-            if 725 <= mouse[0] <= 1065 and 485 <= mouse[1] <= 555:  # LvL2
+            if 725 <= self.mouse[0] <= 1065 and 485 <= self.mouse[1] <= 555:  # LvL2
                 print("LvL2 Start")
-            if 725 <= mouse[0] <= 1065 and 565 <= mouse[1] <= 635:  # Custom LvL
+            if 725 <= self.mouse[0] <= 1065 and 565 <= self.mouse[1] <= 635:  # Custom LvL
                 print("Custom LvL Start")
         elif game.scene == 2:
-            if 48 <= mouse[0] <= 290 and 15 <= mouse[1] <= 80:  # MainMenu
+            if 48 <= self.mouse[0] <= 290 and 15 <= self.mouse[1] <= 80:  # MainMenu
                 game.MainMenu()
-            if 950 <= mouse[0] <= 1245 and 140 <= mouse[1] <= 215:  # Change Input
+            if 950 <= self.mouse[0] <= 1245 and 140 <= self.mouse[1] <= 215:  # Change Input
                 print(pygame.joystick.get_count())
                 if pygame.joystick.get_count() != 0:
                     Settings.input_device(self.self_settings, 1)
@@ -126,33 +126,46 @@ class Game:
                     self.SettingsMenu()
 
             # change
-            if 950 <= mouse[0] <= 1245 and 235 <= mouse[1] <= 565:
+            if 950 <= self.mouse[0] <= 1245 and 235 <= self.mouse[1] <= 565:
                 img = pygame.image.load(f"gameFiles/img/wait_for_input.png")
-                if 235 <= mouse[1] <= 300:
+                if 235 <= self.mouse[1] <= 300:
                     screen.blit(img, (954, 235))
                     pygame.display.flip()
                     if Settings.change_key(self.self_settings, 1):
                         self.SettingsMenu()
-                elif 305 <= mouse[1] <= 368:
+                elif 305 <= self.mouse[1] <= 368:
                     screen.blit(img, (954, 305))
                     pygame.display.flip()
                     if Settings.change_key(self.self_settings, 2):
                         self.SettingsMenu()
-                elif 375 <= mouse[1] <= 440:
+                elif 375 <= self.mouse[1] <= 440:
                     screen.blit(img, (954, 375))
                     pygame.display.flip()
                     if Settings.change_key(self.self_settings, 3):
                         self.SettingsMenu()
-                elif 445 <= mouse[1] <= 500:
+                elif 445 <= self.mouse[1] <= 500:
                     screen.blit(img, (954, 445))
                     pygame.display.flip()
                     if Settings.change_key(self.self_settings, 4):
                         self.SettingsMenu()
-                elif 505 <= mouse[1] <= 565:
+                elif 505 <= self.mouse[1] <= 565:
                     screen.blit(img, (954, 505))
                     pygame.display.flip()
                     if Settings.change_key(self.self_settings, "Over"):
                         self.SettingsMenu()
+
+    def game_init(self):
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    self.mouse = pygame.mouse.get_pos()
+                    # print(mouse)
+                    game.check_buttons()
+
+            clock.tick(FPS)
 
     def exit(self):
         sys.exit(0)
@@ -233,7 +246,7 @@ class Settings:
 
 if __name__ == '__main__':
     if pygame.joystick.get_count() >= 2:
-        print("Disconnect secont joystick")
+        print("Disconnect second joystick")
         time.sleep(5)
         exit(0)
     else:
@@ -245,17 +258,8 @@ if __name__ == '__main__':
             Settings.input_device(s, 1, 0)
             print("Джостик не найден")
     running = True
-    game = Game()
+    game = MainMenu()
     game.MainMenu()
+    game.game_init()
 
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                mouse = pygame.mouse.get_pos()
-                # print(mouse)
-                game.check_buttons()
-
-        clock.tick(FPS)
     pygame.quit()
