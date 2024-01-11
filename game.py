@@ -15,122 +15,17 @@ clock = pygame.time.Clock()
 
 class MainMenu:
     def __init__(self):
-        pass
+        self.scene = 0
+        self.font = pygame.font.Font(None, 36)
+        self.self_settings = Settings()
 
     def MainMenu(self):
-        img = pygame.image.load('gameFiles/img/MainMenu.png')
-        rect = img.get_rect()
-        rect.center = (infoObject.current_w/2, infoObject.current_h/2)
-        gameDisplay.blit(img, rect)
+        img = pygame.image.load('gameFiles/img/Menu/Main.png')
+        screen.blit(img, (0, 0))
+        self.scene = 0
+
+        # pygame.display.update()
         pygame.display.flip()
-
-    def game_init(self):
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.mouse = pygame.mouse.get_pos()
-                    # print(mouse)
-                    game.check_buttons()
-
-            clock.tick(FPS)
-
-    def exit(self):
-        sys.exit(0)
-
-
-class Settings:
-    def __init__(self):
-        self.settings = pickledb.load('gameFiles/settings.json', True)
-
-    def input_device(self, do=0, device=None):
-        if do == 0:
-            return int(self.settings.get("input"))
-        elif do == 1:
-            if device is None:
-                now = int(self.settings.get("input"))
-                if now == 1:
-                    self.settings.set("input", "0")
-                elif now == 0:
-                    self.settings.set("input", "1")
-                return int(self.settings.get("input"))
-            else:
-                self.settings.set("input", f"{device}")
-
-    def get(self, track):
-        if int(self.settings.get("input")) == 0:
-            x = self.settings.get(f"keyboard{track}")
-            return x.upper()
-        elif int(self.settings.get("input")) == 1:
-            x = self.settings.get(f"gamepad{track}")
-            return x.upper()
-
-    def change_key(self, track):
-        if int(self.settings.get("input")) == 0:
-            key = 0
-            while key == 0:
-                events = pygame.event.get()
-                for event in events:
-                    if event.type == pygame.KEYDOWN:
-                        key = pygame.key.name(event.key)
-            self.settings.set(f"keyboard{track}", key)
-        elif int(self.settings.get("input")) == 1:
-            key = None
-            while key is None:
-                events = pygame.event.get()
-                for event in events:
-                    if event.type == pygame.JOYBUTTONDOWN:
-                        key = event.button
-                    if event.type == pygame.JOYAXISMOTION:
-                        if event.axis == 4 or event.axis == 5:
-                            if event.axis == 4:
-                                key = "LT"
-                            elif event.axis == 5:
-                                key = "RT"
-                    if event.type == pygame.JOYHATMOTION:
-                        if event.value == (0, -1):
-                            key = "DOWN"
-                        elif event.value == (1, 0):
-                            key = "RIGHT"
-                        elif event.value == (-1, 0):
-                            key = "LEFT"
-                        elif event.value == (0, 1):
-                            key = "UP"
-            if key == 0:
-                key = "A"
-            elif key == 1:
-                key = "B"
-            elif key == 2:
-                key = "X"
-            elif key == 3:
-                key = "Y"
-            elif key == 4:
-                key = "LB"
-            elif key == 5:
-                key = "RB"
-            self.settings.set(f"gamepad{track}", key)
-        return True
-
-
-if __name__ == '__main__':
-    if pygame.joystick.get_count() >= 2:
-        print("Disconnect second joystick")
-        time.sleep(5)
-        exit(0)
-    else:
-        try:
-            joystick = pygame.joystick.Joystick(0)
-            joystick.init()
-        except Exception:
-            s = Settings()
-            Settings.input_device(s, 1, 0)
-            print("Джостик не найден")
-    running = True
-    game = MainMenu()
-    game.MainMenu()
-    game.game_init()
 
     def ChoiceMenu(self):
         img = pygame.image.load('gameFiles/img/Menu/Choice.png')
@@ -222,8 +117,6 @@ if __name__ == '__main__':
                 game.start()
             if 725 <= mouse[0] <= 1065 and 565 <= mouse[1] <= 635:  # Custom LvL
                 print("Custom LvL Start")
-                game = Game(self.self_settings, 3, [100, 500])
-                game.start()
         elif self.scene == 2:
             if 48 <= mouse[0] <= 290 and 15 <= mouse[1] <= 80:  # MainMenu
                 self.MainMenu()
@@ -364,7 +257,7 @@ class Note(pygame.sprite.Sprite):
         self.rect.y += 3
 
 
-class Game(Window):
+class Game(MainMenu):
     def __init__(self, setting: Settings, lvl_number, notes_t: list):
 
         super().__init__()
@@ -444,7 +337,7 @@ if __name__ == '__main__':
             Settings.input_device(s, 1, 0)
             print("Джостик не найден")
     running = True
-    window = Window()
+    window = MainMenu()
     window.MainMenu()
 
     while running:
