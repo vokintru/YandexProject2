@@ -1,9 +1,13 @@
+import sys
+import time
 import pygame
+import pickledb
 from pygame.locals import *
 
 pygame.init()
+pygame.joystick.init()
 infoObject = pygame.display.Info()
-gameDisplay = pygame.display.set_mode((infoObject.current_w, infoObject.current_h))  # Полный экран
+screen = pygame.display.set_mode((1920, 1080))  # Full Hd экран
 pygame.display.set_caption('Ритм Игра')
 FPS = 100
 clock = pygame.time.Clock()
