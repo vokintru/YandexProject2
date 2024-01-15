@@ -3,6 +3,7 @@ import time
 import pygame
 import pickledb
 from pygame.locals import *
+from random import randrange
 
 pygame.init()
 pygame.joystick.init()
@@ -12,6 +13,74 @@ pygame.display.set_caption('Ритм Игра')
 FPS = 100
 clock = pygame.time.Clock()
 
+
+def get_j_button_down(event):
+    key = None
+    if event.type == pygame.JOYBUTTONDOWN:
+        key = event.button
+    if event.type == pygame.JOYAXISMOTION:
+        if event.axis == 4 or event.axis == 5:
+            if event.axis == 4:
+                key = "LT"
+            elif event.axis == 5:
+                key = "RT"
+    if event.type == pygame.JOYHATMOTION:
+        if event.value == (0, -1):
+            key = "DOWN"
+        elif event.value == (1, 0):
+            key = "RIGHT"
+        elif event.value == (-1, 0):
+            key = "LEFT"
+        elif event.value == (0, 1):
+            key = "UP"
+    if key == 0:
+        key = "A"
+    elif key == 1:
+        key = "B"
+    elif key == 2:
+        key = "X"
+    elif key == 3:
+        key = "Y"
+    elif key == 4:
+        key = "LB"
+    elif key == 5:
+        key = "RB"
+
+    return key
+
+def get_j_button_up(event):
+    key = None
+    if event.type == pygame.JOYBUTTONUP:
+        key = event.button
+    if event.type == pygame.JOYAXISMOTION:
+        if event.axis == 4 or event.axis == 5:
+            if event.axis == 4:
+                key = "LT"
+            elif event.axis == 5:
+                key = "RT"
+    if event.type == pygame.JOYHATMOTION:
+        if event.value == (0, -1):
+            key = "DOWN"
+        elif event.value == (1, 0):
+            key = "RIGHT"
+        elif event.value == (-1, 0):
+            key = "LEFT"
+        elif event.value == (0, 1):
+            key = "UP"
+    if key == 0:
+        key = "A"
+    elif key == 1:
+        key = "B"
+    elif key == 2:
+        key = "X"
+    elif key == 3:
+        key = "Y"
+    elif key == 4:
+        key = "LB"
+    elif key == 5:
+        key = "RB"
+
+    return key
 
 class MainMenu:
     def __init__(self):
@@ -235,9 +304,19 @@ class Settings:
         return True
 
 
+class Box(pygame.sprite.Sprite):
+    def __init__(self, game):
+        super().__init__(game.all_sprites, game.boxes_group)
+        self.image = pygame.Surface((1920, 1))
+        # self.image.fill(pygame.Color('blue'))
+        self.rect = self.image.get_rect()
+        self.rect.x = 0
+        self.rect.y = 1200
+
+
 class Note(pygame.sprite.Sprite):
     def __init__(self, game, track):
-        super().__init__(game.all_sprites)
+        super().__init__(game.all_sprites, game.notes_group)
         self.image = pygame.image.load('gameFiles/img/note1.png')
         self.rect = self.image.get_rect()
         if track == 1:
@@ -254,7 +333,7 @@ class Note(pygame.sprite.Sprite):
             self.rect.y = 5
 
     def update(self):
-        self.rect.y += 3
+        self.rect.y += 5
 
 
 class Game(MainMenu):
@@ -266,6 +345,8 @@ class Game(MainMenu):
         self.lvl_n = lvl_number
         self.notes_t = notes_t
         self.all_sprites = pygame.sprite.Group()
+        self.notes_group = pygame.sprite.Group()
+        self.boxes_group = pygame.sprite.Group()
         self.status_track = [False, False, False, False]
 
     def draw(self):
@@ -280,16 +361,18 @@ class Game(MainMenu):
         pygame.draw.rect(screen, pygame.Color('#ffffff'), (1112, 0, 100, 1080))
         pygame.draw.rect(screen, pygame.Color('#ffffff'), (1516, 0, 100, 1080))
 
-        pygame.draw.rect(screen, pygame.Color(self.colors[0]), (304, 1000, 100, 1080))
-        pygame.draw.rect(screen, pygame.Color(self.colors[1]), (708, 1000, 100, 1080))
-        pygame.draw.rect(screen, pygame.Color(self.colors[2]), (1112, 1000, 100, 1080))
-        pygame.draw.rect(screen, pygame.Color(self.colors[3]), (1516, 1000, 100, 1080))
+        pygame.draw.rect(screen, pygame.Color(self.colors[0]), (304, 930, 100, 1080))
+        pygame.draw.rect(screen, pygame.Color(self.colors[1]), (708, 930, 100, 1080))
+        pygame.draw.rect(screen, pygame.Color(self.colors[2]), (1112, 930, 100, 1080))
+        pygame.draw.rect(screen, pygame.Color(self.colors[3]), (1516, 930, 100, 1080))
 
     def start(self):
-        s = 199
+        s = 99
         running = True
+        box = Box(self)
         while running:
             for event in pygame.event.get():
+                key = 0
                 if event.type == pygame.QUIT:
                     running = False
                 if event.type == pygame.KEYDOWN:
@@ -298,18 +381,40 @@ class Game(MainMenu):
                     for i in range(1, 5):
                         if pygame.key.name(event.key).upper() == self.setting.get(i):
                             self.status_track[i - 1] = True
+                            self.on_click(i)
                 if event.type == pygame.KEYUP:
                     for i in range(1, 5):
                         if pygame.key.name(event.key).upper() == self.setting.get(i):
-                            #self.colors[i - 1] = '#00ff00'
+                            # self.colors[i - 1] = '#00ff00'
                             self.status_track[i - 1] = False
+                if event.type == pygame.JOYBUTTONDOWN:
+                    pass
+                if event.type == pygame.JOYAXISMOTION:
+                    if event.axis == 4 or event.axis == 5:
+                        if event.axis == 4:
+                            key = "LT"
+                        elif event.axis == 5:
+                            key = "RT"
+
+                for i in range(1, 5):
+                    if get_j_button_down(event) == self.setting.get(i):
+                        self.status_track[i - 1] = True
+                        self.on_click(i)
+                for i in range(1, 5):
+                    if get_j_button_up(event) == self.setting.get(i):
+                        # self.colors[i - 1] = '#00ff00'
+                        self.status_track[i - 1] = False
+            if pygame.sprite.spritecollide(box, self.notes_group, False):
+                break
+
             s += 1
             if s == 200:
                 s = 0
-                Note(self, 1)
-                Note(self, 2)
-                Note(self, 3)
-                Note(self, 4)
+                x = randrange(1, 5)
+                Note(self, x)
+                # Note(self, 2)
+                # Note(self, 3)
+                # Note(self, 4)
             pygame.display.flip()
             clock.tick(FPS)
             screen.fill(pygame.Color('black'))
@@ -318,9 +423,20 @@ class Game(MainMenu):
             self.all_sprites.update()
         self.ChoiceMenu()
 
-
     def on_click(self, track):
-        pass
+        for note in self.notes_group:
+            if track == 1:
+                if note.rect.y > 928 and note.rect.x == 325:
+                    note.kill()
+            elif track == 2:
+                if note.rect.y > 928 and note.rect.x == 729:
+                    note.kill()
+            elif track == 3:
+                if note.rect.y > 928 and note.rect.x == 1133:
+                    note.kill()
+            elif track == 4:
+                if note.rect.y > 928 and note.rect.x == 1535:
+                    note.kill()
 
 
 if __name__ == '__main__':
