@@ -1,12 +1,15 @@
+import random
 import sys
 import time
 import webbrowser
-
+import get_lvl
 import pygame
 import pickledb
 from pygame.locals import *
+from pygame import mixer
 
 pygame.init()
+mixer.init()
 pygame.joystick.init()
 infoObject = pygame.display.Info()
 screen = pygame.display.set_mode((1920, 1080))  # Full Hd экран
@@ -131,11 +134,11 @@ class MainMenu:
                 self.MainMenu()
             if 660 <= mouse[0] <= 1258 and 342 <= mouse[1] <= 452:  # LvL1
                 print("LvL1 Start")
-                game = Game(self.self_settings, 1, [100, 500])
+                game = Game(self.self_settings, "levels/lvl1", [100, 500])
                 game.start()
             if 660 <= mouse[0] <= 1258 and 484 <= mouse[1] <= 595:  # LvL2
                 print("LvL2 Start")
-                game = Game(self.self_settings, 2, [100, 500])
+                game = Game(self.self_settings, "levels/lvl2", [100, 500])
                 game.start()
             if 660 <= mouse[0] <= 1258 and 627 <= mouse[1] <= 737:  # Custom LvL
                 print("Custom LvL Start")
@@ -258,25 +261,24 @@ class Settings:
 
 
 class Note(pygame.sprite.Sprite):
-    def __init__(self, game, track):
+    def __init__(self, game, track, time):
         super().__init__(game.all_sprites)
         self.image = pygame.image.load('gameFiles/img/note1.png')
         self.rect = self.image.get_rect()
         if track == 1:
             self.rect.x = 325
-            self.rect.y = 5
         elif track == 2:
             self.rect.x = 729
-            self.rect.y = 5
         elif track == 3:
             self.rect.x = 1133
-            self.rect.y = 5
         elif track == 4:
             self.rect.x = 1535
-            self.rect.y = 5
+
+        self.rect.y = 929 - 75 * time
+        print(self.rect.y, time)
 
     def update(self):
-        self.rect.y += 3
+        self.rect.y += 6.5
 
 
 class Game(MainMenu):
@@ -308,8 +310,12 @@ class Game(MainMenu):
         pygame.draw.rect(screen, pygame.Color(self.colors[3]), (1516, 1000, 100, 1080))
 
     def start(self):
-        s = 199
         running = True
+        lvl = get_lvl.get_lvl(self.lvl_n + "/lvl.json")
+        mixer.music.load(self.lvl_n + "/lvl.mp3")
+        for i in lvl:
+            Note(self, random.randint(1, 4), i[0])  # Рандом на время
+        mixer.music.play()
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -323,23 +329,17 @@ class Game(MainMenu):
                 if event.type == pygame.KEYUP:
                     for i in range(1, 5):
                         if pygame.key.name(event.key).upper() == self.setting.get(i):
-                            #self.colors[i - 1] = '#00ff00'
+                            # self.colors[i - 1] = '#00ff00'
                             self.status_track[i - 1] = False
-            s += 1
-            if s == 200:
-                s = 0
-                Note(self, 1)
-                Note(self, 2)
-                Note(self, 3)
-                Note(self, 4)
+
             pygame.display.flip()
-            clock.tick(FPS)
+            clock.tick(100)
             screen.fill(pygame.Color('black'))
             self.draw()
             self.all_sprites.draw(screen)
             self.all_sprites.update()
+        mixer.music.stop()
         self.ChoiceMenu()
-
 
     def on_click(self, track):
         pass
