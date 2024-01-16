@@ -261,24 +261,26 @@ class Settings:
 
 
 class Note(pygame.sprite.Sprite):
-    def __init__(self, game, track, time):
+    def __init__(self, game, track, time, i):
         super().__init__(game.all_sprites)
-        self.image = pygame.image.load('gameFiles/img/note1.png')
+        if len(i[1]) > 1:
+            self.image = pygame.image.load('gameFiles/img/note2.png')
+        else:
+            self.image = pygame.image.load('gameFiles/img/note1.png')
         self.rect = self.image.get_rect()
         if track == 1:
-            self.rect.x = 325
+            self.rect.x = 329
         elif track == 2:
-            self.rect.x = 729
+            self.rect.x = 733
         elif track == 3:
-            self.rect.x = 1133
+            self.rect.x = 1136
         elif track == 4:
-            self.rect.x = 1535
+            self.rect.x = 1539
 
-        self.rect.y = 929 - 75 * time
-        print(self.rect.y, time)
+        self.rect.y = 950 - 65 * time
 
     def update(self):
-        self.rect.y += 6.5
+        self.rect.y += 6
 
 
 class Game(MainMenu):
@@ -314,8 +316,10 @@ class Game(MainMenu):
         lvl = get_lvl.get_lvl(self.lvl_n + "/lvl.json")
         mixer.music.load(self.lvl_n + "/lvl.mp3")
         for i in lvl:
-            Note(self, random.randint(1, 4), i[0])  # Рандом на время
+            Note(self, int(i[1][0][4:]), i[0], i)
+            #print(i)
         mixer.music.play()
+        prev_time = time.time()
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -331,13 +335,21 @@ class Game(MainMenu):
                         if pygame.key.name(event.key).upper() == self.setting.get(i):
                             # self.colors[i - 1] = '#00ff00'
                             self.status_track[i - 1] = False
+                if not pygame.mixer.music.get_busy():
+                    running = False
+
 
             pygame.display.flip()
             clock.tick(100)
             screen.fill(pygame.Color('black'))
             self.draw()
             self.all_sprites.draw(screen)
-            self.all_sprites.update()
+
+            current_time = time.time()
+            elapsed_time = current_time - prev_time
+            if elapsed_time >= 10 / 1000:  # 1 миллисекунда в секундах
+                self.all_sprites.update()
+                prev_time = current_time
         mixer.music.stop()
         self.ChoiceMenu()
 
