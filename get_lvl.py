@@ -16,7 +16,7 @@ def get_lvl(file_name):
                 o2 = int(int(j["pos"]) / 100)
                 o_glob = o1 * 16 + o2
 
-                new_out.append((o_glob, j["markers"]))
+                new_out.append((o1, o2, j["markers"]))
     return new_out
 
 

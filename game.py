@@ -1,12 +1,13 @@
-import random
 import sys
+import threading
 import time
 import webbrowser
-import get_lvl
-import pygame
+
 import pickledb
-from pygame.locals import *
+import pygame
 from pygame import mixer
+
+import get_lvl
 
 pygame.init()
 mixer.init()
@@ -261,9 +262,10 @@ class Settings:
 
 
 class Note(pygame.sprite.Sprite):
-    def __init__(self, game, track, time, i):
+    def __init__(self, game, track, index, time, i):
         super().__init__(game.all_sprites)
-        if len(i[1]) > 1:
+        self.otl = 0
+        if len(i[2]) > 1:
             self.image = pygame.image.load('gameFiles/img/note2.png')
         else:
             self.image = pygame.image.load('gameFiles/img/note1.png')
@@ -277,10 +279,19 @@ class Note(pygame.sprite.Sprite):
         elif track == 4:
             self.rect.x = 1539
 
-        self.rect.y = 950 - 65 * time
+        self.rect.y = 1000 - (index * 1200 + time * 75)
+        self.tochno = self.rect.y
+        #print(self.rect.y)
 
-    def update(self):
-        self.rect.y += 6
+    def update(self, dt):
+        self.tochno += float(5.9 * dt / 10)
+        self.rect.y = self.tochno
+        # if self.otl < 4:
+        #    self.rect.y += 6
+        #    self.otl += 1
+        # else:
+        #    self.rect.y += 7
+        #    self.otl = 0
 
 
 class Game(MainMenu):
@@ -316,10 +327,10 @@ class Game(MainMenu):
         lvl = get_lvl.get_lvl(self.lvl_n + "/lvl.json")
         mixer.music.load(self.lvl_n + "/lvl.mp3")
         for i in lvl:
-            Note(self, int(i[1][0][4:]), i[0], i)
-            #print(i)
+            Note(self, int(i[2][0][4:]), i[0], i[1], i)
+            # print(i)
+        #no = Note(self, 3, 5, 8, ["line3", "1", ["line1"]])
         mixer.music.play()
-        prev_time = time.time()
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -335,21 +346,22 @@ class Game(MainMenu):
                         if pygame.key.name(event.key).upper() == self.setting.get(i):
                             # self.colors[i - 1] = '#00ff00'
                             self.status_track[i - 1] = False
-                if not pygame.mixer.music.get_busy():
-                    running = False
+            if not pygame.mixer.music.get_busy():
+                running = False
 
 
             pygame.display.flip()
-            clock.tick(100)
+
+            dt = clock.tick(100)
+            #print(dt)
+            self.all_sprites.update(dt)
+
             screen.fill(pygame.Color('black'))
+
             self.draw()
             self.all_sprites.draw(screen)
-
-            current_time = time.time()
-            elapsed_time = current_time - prev_time
-            if elapsed_time >= 10 / 1000:  # 1 миллисекунда в секундах
-                self.all_sprites.update()
-                prev_time = current_time
+            #print(5.9 * dt / 10)
+            #print(no.rect.y)
         mixer.music.stop()
         self.ChoiceMenu()
 
