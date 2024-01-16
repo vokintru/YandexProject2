@@ -121,8 +121,9 @@ class MainMenu:
 
     def check_buttons(self):
         if self.scene == 0:  # MainMenu
-            if 810 <= mouse[0] <= 1109 and 540 <= mouse[1] <= 651:  # ChoiceLvL
-                self.ChoiceMenu()
+            if 810 <= mouse[0] <= 1109 and 540 <= mouse[1] <= 651:  # Game
+                game = Game(self.self_settings, "levels/lvl1", [100, 500])
+                game.start()
             if 1635 <= mouse[0] <= 1859 and 59 <= mouse[1] <= 132:  # Settings
                 self.SettingsMenu()
             if 31 <= mouse[0] <= 219 and 982 <= mouse[1] <= 1056:  # Authors
@@ -130,19 +131,19 @@ class MainMenu:
                 pass
             if 60 <= mouse[0] <= 134 and 59 <= mouse[1] <= 132:  # Exit
                 self.exit()
-        elif self.scene == 1:  # ChoiceMenu
-            if 52 <= mouse[0] <= 150 and 56 <= mouse[1] <= 130:  # Back
-                self.MainMenu()
-            if 660 <= mouse[0] <= 1258 and 342 <= mouse[1] <= 452:  # LvL1
-                print("LvL1 Start")
-                game = Game(self.self_settings, "levels/lvl1", [100, 500])
-                game.start()
-            if 660 <= mouse[0] <= 1258 and 484 <= mouse[1] <= 595:  # LvL2
-                print("LvL2 Start")
-                game = Game(self.self_settings, "levels/lvl2", [100, 500])
-                game.start()
-            if 660 <= mouse[0] <= 1258 and 627 <= mouse[1] <= 737:  # Custom LvL
-                print("Custom LvL Start")
+        #elif self.scene == 1:  # ChoiceMenu
+        #    if 52 <= mouse[0] <= 150 and 56 <= mouse[1] <= 130:  # Back
+        #        self.MainMenu()
+        #    if 660 <= mouse[0] <= 1258 and 342 <= mouse[1] <= 452:  # LvL1
+        #        print("LvL1 Start")
+        #        game = Game(self.self_settings, "levels/lvl1", [100, 500])
+        #        game.start()
+        #    if 660 <= mouse[0] <= 1258 and 484 <= mouse[1] <= 595:  # LvL2
+        #        print("LvL2 Start")
+        #        game = Game(self.self_settings, "levels/lvl2", [100, 500])
+        #        game.start()
+        #    if 660 <= mouse[0] <= 1258 and 627 <= mouse[1] <= 737:  # Custom LvL
+        #        print("Custom LvL Start")
         elif self.scene == 2:
             if 52 <= mouse[0] <= 151 and 56 <= mouse[1] <= 130:  # Back
                 self.MainMenu()
@@ -330,6 +331,12 @@ class Game(MainMenu):
             Note(self, int(i[2][0][4:]), i[0], i[1], i)
             # print(i)
         #no = Note(self, 3, 5, 8, ["line3", "1", ["line1"]])
+        if int(self.setting.input_device()) == 0:
+            input_d = 0
+        elif int(self.setting.input_device()) == 1:
+            input_d = 1
+        otsr = 0
+        key = None
         mixer.music.play()
         while running:
             for event in pygame.event.get():
@@ -338,14 +345,62 @@ class Game(MainMenu):
                 if event.type == pygame.KEYDOWN:
                     if event.key == 27:
                         running = False
-                    for i in range(1, 5):
-                        if pygame.key.name(event.key).upper() == self.setting.get(i):
-                            self.status_track[i - 1] = True
-                if event.type == pygame.KEYUP:
-                    for i in range(1, 5):
-                        if pygame.key.name(event.key).upper() == self.setting.get(i):
+                    if input_d == 0:
+                        for i in range(1, 5):
+                            if pygame.key.name(event.key).upper() == self.setting.get(i):
+                                self.status_track[i - 1] = True
+                if input_d == 0:
+                    if event.type == pygame.KEYUP:
+                        for i in range(1, 5):
+                            if pygame.key.name(event.key).upper() == self.setting.get(i):
+                                # self.colors[i - 1] = '#00ff00'
+                                self.status_track[i - 1] = False
+                elif input_d == 1:
+                    if event.type == pygame.JOYBUTTONDOWN:
+                        key = event.button
+                    if event.type == pygame.JOYAXISMOTION:
+                        if event.axis == 4 and event.value >= 0 or event.axis == 5 and event.value >= 0:
+                            if event.axis == 4:
+                                key = "LT"
+                            elif event.axis == 5:
+                                key = "RT"
+                            else:
+                                key = None
+                    if event.type == pygame.JOYHATMOTION:
+                        if event.value == (0, -1):
+                            key = "DOWN"
+                        elif event.value == (1, 0):
+                            key = "RIGHT"
+                        elif event.value == (-1, 0):
+                            key = "LEFT"
+                        elif event.value == (0, 1):
+                            key = "UP"
+                    if key == 0:
+                        key = "A"
+                    elif key == 1:
+                        key = "B"
+                    elif key == 2:
+                        key = "X"
+                    elif key == 3:
+                        key = "Y"
+                    elif key == 4:
+                        key = "LB"
+                    elif key == 5:
+                        key = "RB"
+
+
+                    for i in range(6, 10):
+                        if key == self.setting.get(i - 5):
                             # self.colors[i - 1] = '#00ff00'
-                            self.status_track[i - 1] = False
+                            self.status_track[i - 6] = True
+                            otsr = 1
+                        if otsr > 0:
+                            otsr -= 1
+                        elif self.status_track[i - 6]:
+                            self.status_track[i - 6] = False
+                key = None
+
+
             if not pygame.mixer.music.get_busy():
                 running = False
 
@@ -363,7 +418,7 @@ class Game(MainMenu):
             #print(5.9 * dt / 10)
             #print(no.rect.y)
         mixer.music.stop()
-        self.ChoiceMenu()
+        self.MainMenu()
 
     def on_click(self, track):
         pass
