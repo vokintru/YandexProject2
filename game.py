@@ -153,7 +153,8 @@ class MainMenu:
             if 1635 <= mouse[0] <= 1859 and 59 <= mouse[1] <= 132:  # Settings
                 self.SettingsMenu()
             if 31 <= mouse[0] <= 219 and 982 <= mouse[1] <= 1056:  # Authors
-                webbrowser.open("https://github.com/vokintru/YandexProject2")
+                webbrowser.open("https://github.com/vokintru/YandexProject2?tab=readme-ov-file"
+                                "#%D0%B0%D0%B2%D1%82%D0%BE%D1%80%D1%8B")
                 pass
             if 60 <= mouse[0] <= 134 and 59 <= mouse[1] <= 132:  # Exit
                 self.exit()
