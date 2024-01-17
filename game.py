@@ -160,27 +160,27 @@ class MainMenu:
             if 1012 <= mouse[0] <= 1259 and 225 <= mouse[1] <= 749:
                 img = pygame.image.load(f"gameFiles/img/wait_for_input.png")
                 if 225 <= mouse[1] <= 329:
-                    screen.blit(img, (954, 235))
+                    screen.blit(img, (1012, 225))
                     pygame.display.flip()
                     if Settings.change_key(self.self_settings, 1):
                         self.SettingsMenu()
                 elif 330 <= mouse[1] <= 434:
-                    screen.blit(img, (954, 305))
+                    screen.blit(img, (1012, 330))
                     pygame.display.flip()
                     if Settings.change_key(self.self_settings, 2):
                         self.SettingsMenu()
                 elif 435 <= mouse[1] <= 539:
-                    screen.blit(img, (954, 375))
+                    screen.blit(img, (1012, 435))
                     pygame.display.flip()
                     if Settings.change_key(self.self_settings, 3):
                         self.SettingsMenu()
                 elif 540 <= mouse[1] <= 664:
-                    screen.blit(img, (954, 445))
+                    screen.blit(img, (1012, 540))
                     pygame.display.flip()
                     if Settings.change_key(self.self_settings, 4):
                         self.SettingsMenu()
                 elif 665 <= mouse[1] <= 749:
-                    screen.blit(img, (954, 505))
+                    screen.blit(img, (1012, 665))
                     pygame.display.flip()
                     if Settings.change_key(self.self_settings, "Over"):
                         self.SettingsMenu()
@@ -420,7 +420,7 @@ class Game(MainMenu):
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
+                    sys.exit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == 27:
                         running = False
