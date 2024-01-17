@@ -131,7 +131,7 @@ class MainMenu:
                 pass
             if 60 <= mouse[0] <= 134 and 59 <= mouse[1] <= 132:  # Exit
                 self.exit()
-        #elif self.scene == 1:  # ChoiceMenu
+        # elif self.scene == 1:  # ChoiceMenu
         #    if 52 <= mouse[0] <= 150 and 56 <= mouse[1] <= 130:  # Back
         #        self.MainMenu()
         #    if 660 <= mouse[0] <= 1258 and 342 <= mouse[1] <= 452:  # LvL1
@@ -209,11 +209,19 @@ class Settings:
 
     def get(self, track):
         if int(self.settings.get("input")) == 0:
-            x = self.settings.get(f"keyboard{track}")
-            return x.upper()
+            if track == 5:
+                x = self.settings.get(f"keyboardOver")
+                return x.upper()
+            else:
+                x = self.settings.get(f"keyboard{track}")
+                return x.upper()
         elif int(self.settings.get("input")) == 1:
-            x = self.settings.get(f"gamepad{track}")
-            return x.upper()
+            if track == 5:
+                x = self.settings.get(f"gamepadOver")
+                return x.upper()
+            else:
+                x = self.settings.get(f"gamepad{track}")
+                return x.upper()
 
     def change_key(self, track):
         if int(self.settings.get("input")) == 0:
@@ -264,7 +272,7 @@ class Settings:
 
 class Note(pygame.sprite.Sprite):
     def __init__(self, game, track, index, time, i):
-        super().__init__(game.all_sprites)
+        super().__init__(game.all_sprites, game.notes_group)
         self.otl = 0
         if len(i[2]) > 1:
             self.image = pygame.image.load('gameFiles/img/note2.png')
@@ -282,7 +290,7 @@ class Note(pygame.sprite.Sprite):
 
         self.rect.y = 1000 - (index * 1200 + time * 75)
         self.tochno = self.rect.y
-        #print(self.rect.y)
+        # print(self.rect.y)
 
     def update(self, dt):
         self.tochno += float(5.9 * dt / 10)
@@ -295,6 +303,42 @@ class Note(pygame.sprite.Sprite):
         #    self.otl = 0
 
 
+class Box(pygame.sprite.Sprite):
+    def __init__(self, game):
+        super().__init__(game.all_sprites, game.boxes_group)
+        self.image = pygame.Surface((1920, 1))
+        # self.image.fill(pygame.Color('blue'))
+        self.rect = self.image.get_rect()
+        self.rect.x = 0
+        self.rect.y = 1200
+
+
+class Points:
+    def __init__(self):
+        self.over = False
+        self.over_power = 0
+        self.streak = [1, 0]
+
+        self.total = 0
+        self.over_claim = 0
+        self.max_streak = "x1"
+
+    def claim(self, over=False):
+        if over is True and self.over_power < 10:
+            self.over_power += 200
+        if self.over is True:
+            self.total += 50 * (self.streak[0] * 2)
+        else:
+            self.total += 50 * self.streak[0]
+
+        if self.streak[1] == 7:
+            self.streak[0] += 1
+            self.streak[1] = 0
+        else:
+            self.streak[1] += 1
+        return
+
+
 class Game(MainMenu):
     def __init__(self, setting: Settings, lvl_number, notes_t: list):
 
@@ -304,6 +348,8 @@ class Game(MainMenu):
         self.lvl_n = lvl_number
         self.notes_t = notes_t
         self.all_sprites = pygame.sprite.Group()
+        self.notes_group = pygame.sprite.Group()
+        self.boxes_group = pygame.sprite.Group()
         self.status_track = [False, False, False, False]
 
     def draw(self):
@@ -330,13 +376,15 @@ class Game(MainMenu):
         for i in lvl:
             Note(self, int(i[2][0][4:]), i[0], i[1], i)
             # print(i)
-        #no = Note(self, 3, 5, 8, ["line3", "1", ["line1"]])
+        # no = Note(self, 3, 5, 8, ["line3", "1", ["line1"]])
         if int(self.setting.input_device()) == 0:
             input_d = 0
         elif int(self.setting.input_device()) == 1:
             input_d = 1
         otsr = 0
         key = None
+        box = Box(self)
+        counter = Points()
         mixer.music.play()
         while running:
             for event in pygame.event.get():
@@ -346,15 +394,21 @@ class Game(MainMenu):
                     if event.key == 27:
                         running = False
                     if input_d == 0:
-                        for i in range(1, 5):
+                        #print(pygame.key.name(event.key).upper())
+                        for i in range(1, 6):
                             if pygame.key.name(event.key).upper() == self.setting.get(i):
-                                self.status_track[i - 1] = True
+                                if 1 <= i <= 4:
+                                    self.status_track[i - 1] = True
+                                    self.on_click(i)
+                                elif i == 5:
+                                    counter.over = True
                 if input_d == 0:
                     if event.type == pygame.KEYUP:
                         for i in range(1, 5):
                             if pygame.key.name(event.key).upper() == self.setting.get(i):
                                 # self.colors[i - 1] = '#00ff00'
                                 self.status_track[i - 1] = False
+
                 elif input_d == 1:
                     if event.type == pygame.JOYBUTTONDOWN:
                         key = event.button
@@ -388,40 +442,54 @@ class Game(MainMenu):
                     elif key == 5:
                         key = "RB"
 
-
                     for i in range(6, 10):
                         if key == self.setting.get(i - 5):
-                            # self.colors[i - 1] = '#00ff00'
-                            self.status_track[i - 6] = True
-                            otsr = 1
-                        if otsr > 0:
-                            otsr -= 1
-                        elif self.status_track[i - 6]:
+                            if 1 <= i-5 <= 4:
+                                self.status_track[i - 6] = True
+                                self.on_click(i)
+                            elif i == 5:
+                                s = counter.get_over_time() * 100
+                                counter.over = True
+                        else:
                             self.status_track[i - 6] = False
                 key = None
 
-
             if not pygame.mixer.music.get_busy():
                 running = False
-
+            if counter.over is True and counter.over_power > 0:
+                counter.over_power -= 1
+            else:
+                counter.over = False
 
             pygame.display.flip()
 
             dt = clock.tick(100)
-            #print(dt)
+            # print(dt)
             self.all_sprites.update(dt)
 
             screen.fill(pygame.Color('black'))
 
             self.draw()
             self.all_sprites.draw(screen)
-            #print(5.9 * dt / 10)
-            #print(no.rect.y)
+            # print(5.9 * dt / 10)
+            # print(no.rect.y)
         mixer.music.stop()
         self.MainMenu()
 
     def on_click(self, track):
-        pass
+        for note in self.notes_group:
+            if track == 1:
+                if note.rect.y > 950 and note.rect.x == 329:
+                    note.kill()
+            elif track == 2:
+                if note.rect.y > 950 and note.rect.x == 733:
+                    note.kill()
+            elif track == 3:
+                if note.rect.y > 950 and note.rect.x == 1136:
+                    note.kill()
+            elif track == 4:
+                if note.rect.y > 950 and note.rect.x == 1539:
+                    note.kill()
 
 
 if __name__ == '__main__':
