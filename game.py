@@ -1,12 +1,10 @@
 import sys
-import threading
 import time
+import os
 import webbrowser
-
 import pickledb
 import pygame
 from pygame import mixer
-
 import get_lvl
 
 pygame.init()
@@ -14,7 +12,8 @@ mixer.init()
 pygame.joystick.init()
 infoObject = pygame.display.Info()
 screen = pygame.display.set_mode((1920, 1080))  # Full Hd экран
-pygame.display.set_caption('Ритм Игра')
+pygame.display.set_caption('Rhythm Rampage')
+pygame.display.set_icon(pygame.image.load('gameFiles/img/icon.png'))
 FPS = 100
 clock = pygame.time.Clock()
 
@@ -24,11 +23,38 @@ class MainMenu:
         self.scene = 0
         self.font = pygame.font.Font("gameFiles\Inter-Bold.otf", 44)
         self.self_settings = Settings()
+        self.savestat = LastGame()
 
     def MainMenu(self):
         img = pygame.image.load('gameFiles/img/Menu/Main.png')
         screen.blit(img, (0, 0))
         self.scene = 0
+
+        if self.savestat.is_game_was() is True:
+            total, max_streak, over_claim = self.savestat.load()
+            text = self.font.render("Last Game:", True, (255, 255, 255))
+            text_rect = text.get_rect()
+            text_width, text_height = text_rect.size
+            text_center = 1300 + (470 // 2) - (text_width // 2), 775 - (text_height // 2)
+            screen.blit(text, text_center)
+
+            text = self.font.render(f"Total: {total}", True, (255, 255, 255))
+            text_rect = text.get_rect()
+            text_width, text_height = text_rect.size
+            text_center = 1300 + (470 // 2) - (text_width // 2), 850 - (text_height // 2)
+            screen.blit(text, text_center)
+
+            text = self.font.render(f"Max. Streak: x{max_streak}", True, (255, 255, 255))
+            text_rect = text.get_rect()
+            text_width, text_height = text_rect.size
+            text_center = 1300 + (470 // 2) - (text_width // 2), 925 - (text_height // 2)
+            screen.blit(text, text_center)
+
+            text = self.font.render(f"Overdrive notes climed: {max_streak}", True, (255, 255, 255))
+            text_rect = text.get_rect()
+            text_width, text_height = text_rect.size
+            text_center = 1300 + (470 // 2) - (text_width // 2), 1000 - (text_height // 2)
+            screen.blit(text, text_center)
 
         # pygame.display.update()
         pygame.display.flip()
@@ -189,6 +215,25 @@ class MainMenu:
         sys.exit(0)
 
 
+class LastGame:
+    def __init__(self):
+        self.file = pickledb.load('gameFiles/lastgame.json', True)
+
+    def save(self, total, max_streak, over_claimed):
+        self.file.set("total", total)
+        self.file.set("max_streak", max_streak)
+        self.file.set("over_claimed", over_claimed)
+
+    def load(self):
+        total = self.file.get("total")
+        max_streak = self.file.get("max_streak")
+        over_claimed = self.file.get("over_claimed")
+        return total, max_streak, over_claimed
+
+    def is_game_was(self):
+        return os.path.exists("gameFiles/lastgame.json")
+
+
 class Settings:
     def __init__(self):
         self.settings = pickledb.load('gameFiles/settings.json', True)
@@ -305,16 +350,6 @@ class Note(pygame.sprite.Sprite):
         #    self.otl = 0
 
 
-class Box(pygame.sprite.Sprite):
-    def __init__(self, game):
-        super().__init__(game.all_sprites, game.boxes_group)
-        self.image = pygame.Surface((1920, 1))
-        # self.image.fill(pygame.Color('blue'))
-        self.rect = self.image.get_rect()
-        self.rect.x = 0
-        self.rect.y = 1200
-
-
 class Points:
     def __init__(self):
         self.over = False
@@ -365,7 +400,6 @@ class Game(MainMenu):
         self.font = pygame.font.Font("gameFiles\Inter-Bold.otf", 44)
         self.all_sprites = pygame.sprite.Group()
         self.notes_group = pygame.sprite.Group()
-        self.boxes_group = pygame.sprite.Group()
         self.status_track = [False, False, False, False]
 
     def draw(self):
@@ -391,6 +425,9 @@ class Game(MainMenu):
             text = self.font.render("x" + str(self.counter.streak[0]), True, (255, 255, 255))
         screen.blit(text, (20, 936))
 
+        text = self.font.render(f"Total: {self.counter.total}", True, (255, 255, 255))
+        screen.blit(text, (20, 834))
+
         start_cord = 886
         for i in range(self.counter.streak[1]):
             if self.counter.over is True:
@@ -398,7 +435,7 @@ class Game(MainMenu):
             else:
                 col = pygame.Color('#00ffff')
             pygame.draw.rect(screen, col, (110, start_cord + 20 * i, 40, 10))
-        pygame.draw.rect(screen, pygame.Color('#FFA500'), (170, 884, 40, (7.5 * (self.counter.over_power / 100))))
+        pygame.draw.rect(screen, pygame.Color('#FFA500'), (170, 886, 40, (7.5 * (self.counter.over_power / 100))))
 
     def start(self):
         running = True
@@ -414,7 +451,6 @@ class Game(MainMenu):
             input_d = 1
         otsr = 0
         key = None
-        box = Box(self)
         gamepad_rtlt = 0
         mixer.music.play()
         while running:
@@ -425,7 +461,7 @@ class Game(MainMenu):
                     if event.key == 27:
                         running = False
                     if input_d == 0:
-                        #print(pygame.key.name(event.key).upper())
+                        # print(pygame.key.name(event.key).upper())
                         for i in range(1, 6):
                             if pygame.key.name(event.key).upper() == self.setting.get(i):
                                 if 1 <= i <= 4:
@@ -485,8 +521,8 @@ class Game(MainMenu):
                                 self.on_click(i)
                             elif i == 5:
                                 self.counter.over = True
-                            #self.status_track[i - 1] = True
-                            #self.on_click(i)
+                            # self.status_track[i - 1] = True
+                            # self.on_click(i)
                 key = None
 
             if not pygame.mixer.music.get_busy():
@@ -514,9 +550,7 @@ class Game(MainMenu):
             # print(5.9 * dt / 10)
             # print(no.rect.y)
         mixer.music.stop()
-        print(f"x{self.counter.max_streak}")
-        print(self.counter.total)
-        print(self.counter.over_claim)
+        self.savestat.save(self.counter.total, self.counter.max_streak, self.counter.over_claim)
         self.MainMenu()
 
     def on_click(self, track):
