@@ -276,8 +276,10 @@ class Note(pygame.sprite.Sprite):
         self.otl = 0
         if len(i[2]) > 1:
             self.image = pygame.image.load('gameFiles/img/note2.png')
+            self.over = True
         else:
             self.image = pygame.image.load('gameFiles/img/note1.png')
+            self.over = False
         self.rect = self.image.get_rect()
         if track == 1:
             self.rect.x = 329
@@ -321,21 +323,33 @@ class Points:
 
         self.total = 0
         self.over_claim = 0
-        self.max_streak = "x1"
+        self.max_streak = 1
 
-    def claim(self, over=False):
-        if over is True and self.over_power < 10:
+    def claim(self, overx=False):
+        if overx is True and self.over_power < 2000:
             self.over_power += 200
+
+        if overx is True:
+            self.over_claim += 1
+
         if self.over is True:
             self.total += 50 * (self.streak[0] * 2)
         else:
             self.total += 50 * self.streak[0]
 
-        if self.streak[1] == 7:
+        if self.streak[1] == 7 and self.streak[0] < 6:
             self.streak[0] += 1
-            self.streak[1] = 0
+            if self.streak[0] == 6:
+                self.streak[1] = 8
+            else:
+                self.streak[1] = 0
+            if self.max_streak < self.streak[0]:
+                self.max_streak = self.streak[0]
+        elif self.streak[0] == 6:
+            pass
         else:
             self.streak[1] += 1
+
         return
 
 
@@ -343,10 +357,12 @@ class Game(MainMenu):
     def __init__(self, setting: Settings, lvl_number, notes_t: list):
 
         super().__init__()
+        self.counter = Points()
         self.colors = ['#00ff00', '#00ff00', '#00ff00', '#00ff00']
         self.setting = setting
         self.lvl_n = lvl_number
         self.notes_t = notes_t
+        self.font = pygame.font.Font("gameFiles\Inter-Bold.otf", 44)
         self.all_sprites = pygame.sprite.Group()
         self.notes_group = pygame.sprite.Group()
         self.boxes_group = pygame.sprite.Group()
@@ -364,10 +380,25 @@ class Game(MainMenu):
         pygame.draw.rect(screen, pygame.Color('#ffffff'), (1112, 0, 100, 1080))
         pygame.draw.rect(screen, pygame.Color('#ffffff'), (1516, 0, 100, 1080))
 
-        pygame.draw.rect(screen, pygame.Color(self.colors[0]), (304, 1000, 100, 1080))
-        pygame.draw.rect(screen, pygame.Color(self.colors[1]), (708, 1000, 100, 1080))
-        pygame.draw.rect(screen, pygame.Color(self.colors[2]), (1112, 1000, 100, 1080))
-        pygame.draw.rect(screen, pygame.Color(self.colors[3]), (1516, 1000, 100, 1080))
+        pygame.draw.rect(screen, pygame.Color(self.colors[0]), (304, 1000, 100, 100))
+        pygame.draw.rect(screen, pygame.Color(self.colors[1]), (708, 1000, 100, 100))
+        pygame.draw.rect(screen, pygame.Color(self.colors[2]), (1112, 1000, 100, 100))
+        pygame.draw.rect(screen, pygame.Color(self.colors[3]), (1516, 1000, 100, 100))
+
+        if self.counter.over is True:
+            text = self.font.render("x" + str(self.counter.streak[0] * 2), True, (255, 255, 0))
+        else:
+            text = self.font.render("x" + str(self.counter.streak[0]), True, (255, 255, 255))
+        screen.blit(text, (20, 936))
+
+        start_cord = 886
+        for i in range(self.counter.streak[1]):
+            if self.counter.over is True:
+                col = pygame.Color('#ffff00')
+            else:
+                col = pygame.Color('#00ffff')
+            pygame.draw.rect(screen, col, (110, start_cord + 20 * i, 40, 10))
+        pygame.draw.rect(screen, pygame.Color('#FFA500'), (170, 884, 40, (7.5 * (self.counter.over_power / 100))))
 
     def start(self):
         running = True
@@ -384,7 +415,7 @@ class Game(MainMenu):
         otsr = 0
         key = None
         box = Box(self)
-        counter = Points()
+        gamepad_rtlt = 0
         mixer.music.play()
         while running:
             for event in pygame.event.get():
@@ -401,7 +432,7 @@ class Game(MainMenu):
                                     self.status_track[i - 1] = True
                                     self.on_click(i)
                                 elif i == 5:
-                                    counter.over = True
+                                    self.counter.over = True
                 if input_d == 0:
                     if event.type == pygame.KEYUP:
                         for i in range(1, 5):
@@ -414,12 +445,16 @@ class Game(MainMenu):
                         key = event.button
                     if event.type == pygame.JOYAXISMOTION:
                         if event.axis == 4 and event.value >= 0 or event.axis == 5 and event.value >= 0:
-                            if event.axis == 4:
-                                key = "LT"
-                            elif event.axis == 5:
-                                key = "RT"
+                            if gamepad_rtlt == 0:
+                                if event.axis == 4:
+                                    key = "LT"
+                                elif event.axis == 5:
+                                    key = "RT"
+                                gamepad_rtlt = 1
                             else:
                                 key = None
+                        else:
+                            gamepad_rtlt = 0
                     if event.type == pygame.JOYHATMOTION:
                         if event.value == (0, -1):
                             key = "DOWN"
@@ -441,25 +476,30 @@ class Game(MainMenu):
                         key = "LB"
                     elif key == 5:
                         key = "RB"
-
-                    for i in range(6, 10):
-                        if key == self.setting.get(i - 5):
-                            if 1 <= i-5 <= 4:
-                                self.status_track[i - 6] = True
+                    for i in range(1, 5):
+                        self.status_track[i - 1] = False
+                    for i in range(1, 6):
+                        if key == self.setting.get(i):
+                            if 1 <= i <= 4:
+                                self.status_track[i - 1] = True
                                 self.on_click(i)
                             elif i == 5:
-                                s = counter.get_over_time() * 100
-                                counter.over = True
-                        else:
-                            self.status_track[i - 6] = False
+                                self.counter.over = True
+                            #self.status_track[i - 1] = True
+                            #self.on_click(i)
                 key = None
 
             if not pygame.mixer.music.get_busy():
                 running = False
-            if counter.over is True and counter.over_power > 0:
-                counter.over_power -= 1
+            if self.counter.over is True and self.counter.over_power > 0:
+                self.counter.over_power -= 1
             else:
-                counter.over = False
+                self.counter.over = False
+
+            for note in self.notes_group:
+                if note.rect.y > 1100:
+                    note.kill()
+                    self.counter.streak = [1, 0]
 
             pygame.display.flip()
 
@@ -474,22 +514,34 @@ class Game(MainMenu):
             # print(5.9 * dt / 10)
             # print(no.rect.y)
         mixer.music.stop()
+        print(f"x{self.counter.max_streak}")
+        print(self.counter.total)
+        print(self.counter.over_claim)
         self.MainMenu()
 
     def on_click(self, track):
         for note in self.notes_group:
             if track == 1:
-                if note.rect.y > 950 and note.rect.x == 329:
+                if note.rect.y > 925 and note.rect.x == 329:
                     note.kill()
+                    self.counter.claim(note.over)
+                    return
             elif track == 2:
-                if note.rect.y > 950 and note.rect.x == 733:
+                if note.rect.y > 925 and note.rect.x == 733:
                     note.kill()
+                    self.counter.claim(note.over)
+                    return
             elif track == 3:
-                if note.rect.y > 950 and note.rect.x == 1136:
+                if note.rect.y > 925 and note.rect.x == 1136:
                     note.kill()
+                    self.counter.claim(note.over)
+                    return
             elif track == 4:
-                if note.rect.y > 950 and note.rect.x == 1539:
+                if note.rect.y > 925 and note.rect.x == 1539:
                     note.kill()
+                    self.counter.claim(note.over)
+                    return
+        self.counter.streak = [1, 0]
 
 
 if __name__ == '__main__':
