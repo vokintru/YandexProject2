@@ -32,26 +32,38 @@ class MainMenu:
         self.scene = 0
 
         if self.savestat.is_game_was() is True:
-            total, max_streak, over_claim = self.savestat.load()
-            text = self.font.render("Last Game:", True, (255, 255, 255))
+            over_claim, over_time, total_notes, max_streak, total = self.savestat.load()
+            text = self.font.render("Последняя игра:", True, (255, 255, 255))
+            text_rect = text.get_rect()
+            text_width, text_height = text_rect.size
+            text_center = 1300 + (470 // 2) - (text_width // 2), 625 - (text_height // 2)
+            screen.blit(text, text_center)
+
+            text = self.font.render(f"Собрано overdrive нот: {over_claim}", True, (255, 255, 255))
+            text_rect = text.get_rect()
+            text_width, text_height = text_rect.size
+            text_center = 1300 + (470 // 2) - (text_width // 2), 700 - (text_height // 2)
+            screen.blit(text, text_center)
+
+            text = self.font.render(f"Время overdrive: {over_time}s", True, (255, 255, 255))
             text_rect = text.get_rect()
             text_width, text_height = text_rect.size
             text_center = 1300 + (470 // 2) - (text_width // 2), 775 - (text_height // 2)
             screen.blit(text, text_center)
 
-            text = self.font.render(f"Total: {total}", True, (255, 255, 255))
+            text = self.font.render(f"Всего собрано нот: {total_notes}", True, (255, 255, 255))
             text_rect = text.get_rect()
             text_width, text_height = text_rect.size
             text_center = 1300 + (470 // 2) - (text_width // 2), 850 - (text_height // 2)
             screen.blit(text, text_center)
 
-            text = self.font.render(f"Max. Streak: x{max_streak}", True, (255, 255, 255))
+            text = self.font.render(f"Максимальный стрик: x{max_streak}", True, (255, 255, 255))
             text_rect = text.get_rect()
             text_width, text_height = text_rect.size
             text_center = 1300 + (470 // 2) - (text_width // 2), 925 - (text_height // 2)
             screen.blit(text, text_center)
 
-            text = self.font.render(f"Overdrive notes climed: {over_claim}", True, (255, 255, 255))
+            text = self.font.render(f"Всего: {total}", True, (255, 255, 255))
             text_rect = text.get_rect()
             text_width, text_height = text_rect.size
             text_center = 1300 + (470 // 2) - (text_width // 2), 1000 - (text_height // 2)
@@ -151,6 +163,29 @@ class MainMenu:
         # pygame.display.update()
         pygame.display.flip()
 
+    def GameOverMenu(self, over_claim, over_time, total_notes, max_streak, total):
+        img = pygame.image.load('gameFiles/img/Menu/GameOver.png')
+        screen.blit(img, (0, 0))
+        self.scene = 3
+        j = [over_claim, over_time, total_notes, max_streak, total]
+        text = self.font.render(f"{over_claim}", True, (255, 255, 255))
+        screen.blit(text, (1000, 381))
+
+        text = self.font.render(f"{over_time}s", True, (255, 255, 255))
+        screen.blit(text, (882, 447))
+
+        text = self.font.render(f"{total_notes}", True, (255, 255, 255))
+        screen.blit(text, (897, 514))
+
+        text = self.font.render(f"x{max_streak}", True, (255, 255, 255))
+        screen.blit(text, (1191, 579))
+
+        text = self.font.render(f"{total}", True, (255, 255, 255))
+        screen.blit(text, (730, 645))
+
+        # pygame.display.update()
+        pygame.display.flip()
+
     def check_buttons(self):
         if self.scene == 0:  # MainMenu
             if 810 <= mouse[0] <= 1109 and 540 <= mouse[1] <= 651:  # Pick Lvl
@@ -183,7 +218,6 @@ class MainMenu:
             if 52 <= mouse[0] <= 151 and 56 <= mouse[1] <= 130:  # Back
                 self.MainMenu()
             if 1752 <= mouse[0] <= 1879 and 41 <= mouse[1] <= 168:  # Change Input
-                print(pygame.joystick.get_count())
                 if pygame.joystick.get_count() != 0:
                     Settings.input_device(self.self_settings, 1)
                     self.SettingsMenu()
@@ -222,6 +256,9 @@ class MainMenu:
             elif 1610 <= mouse[0] <= 1640 and 52 <= mouse[1] <= 82:
                 if Settings.change_cheats(self.self_settings):
                     self.SettingsMenu()
+        elif self.scene == 3:
+            if 743 <= mouse[0] <= 1175 and 754 <= mouse[1] <= 848:  # Back
+                self.MainMenu()
 
     def exit(self):
         sys.exit(0)
@@ -231,16 +268,20 @@ class LastGame:
     def __init__(self):
         self.file = pickledb.load('gameFiles/lastgame.json', True)
 
-    def save(self, total, max_streak, over_claimed):
-        self.file.set("total", total)
+    def save(self, over_claim, over_time, total_notes, max_streak, total):
+        self.file.set("over_claim", over_claim)
+        self.file.set("over_time", over_time)
+        self.file.set("total_notes", total_notes)
         self.file.set("max_streak", max_streak)
-        self.file.set("over_claimed", over_claimed)
+        self.file.set("total", total)
 
     def load(self):
-        total = self.file.get("total")
+        over_claim = self.file.get("over_claim")
+        over_time = self.file.get("over_time")
+        total_notes = self.file.get("total_notes")
         max_streak = self.file.get("max_streak")
-        over_claimed = self.file.get("over_claimed")
-        return total, max_streak, over_claimed
+        total = self.file.get("total")
+        return over_claim, over_time, total_notes, max_streak, total
 
     def is_game_was(self):
         return os.path.exists("gameFiles/lastgame.json")
@@ -284,7 +325,6 @@ class Settings:
         return int(self.settings.get("cheats"))
 
     def change_cheats(self):
-        print(int(self.settings.get("cheats")))
         if int(self.settings.get("cheats")) == 0:
             self.settings.set("cheats", 1)
             return True
@@ -383,11 +423,14 @@ class Points:
         self.over_power = 0
         self.streak = [1, 0]
 
-        self.total = 0
         self.over_claim = 0
+        self.total_notes = 0
         self.max_streak = 1
+        self.total = 0
+
 
     def claim(self, overx=False):
+        self.total_notes += 1
         if overx is True and self.over_power < 2000:
             self.over_power += 200
 
@@ -422,6 +465,7 @@ class Game(MainMenu):
         self.counter = Points()
         self.colors = ['#00ff00', '#00ff00', '#00ff00', '#00ff00']
         self.setting = setting
+        self.eim = self.setting.get_cheats()
         self.lvl_n = lvl_number
         self.notes_t = notes_t
         self.font = pygame.font.Font("gameFiles\Inter-Bold.otf", 44)
@@ -481,8 +525,7 @@ class Game(MainMenu):
         otsr = 0
         key = None
         gamepad_rtlt = 0
-        eim = self.setting.get_cheats()
-        self.eim = eim
+        eim = self.eim
         mixer.music.play()
         while running:
             for event in pygame.event.get():
@@ -617,9 +660,11 @@ class Game(MainMenu):
             # print(5.9 * dt / 10)
             # print(no.rect.y)
         mixer.music.stop()
-        self.savestat.save(self.counter.total, self.counter.max_streak, self.counter.over_claim)
-        scene_set(0)
-        self.MainMenu()
+        self.savestat.save(self.counter.over_claim, self.counter.over_claim * 2, self.counter.total_notes,
+                           self.counter.max_streak, self.counter.total)
+        scene_set(3)
+        self.GameOverMenu(self.counter.over_claim, self.counter.over_claim * 2, self.counter.total_notes,
+                          self.counter.max_streak, self.counter.total)
 
     def on_click(self, track):
         for note in self.notes_group:
