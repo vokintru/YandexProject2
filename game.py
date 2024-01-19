@@ -50,7 +50,7 @@ class MainMenu:
             text_center = 1300 + (470 // 2) - (text_width // 2), 925 - (text_height // 2)
             screen.blit(text, text_center)
 
-            text = self.font.render(f"Overdrive notes climed: {max_streak}", True, (255, 255, 255))
+            text = self.font.render(f"Overdrive notes climed: {over_claim}", True, (255, 255, 255))
             text_rect = text.get_rect()
             text_width, text_height = text_rect.size
             text_center = 1300 + (470 // 2) - (text_width // 2), 1000 - (text_height // 2)
@@ -71,6 +71,11 @@ class MainMenu:
         img = pygame.image.load('gameFiles/img/Menu/Settings.png')
         screen.blit(img, (0, 0))
         self.scene = 2
+
+        # EIM
+        if Settings.get_cheats(self.self_settings) == 1:
+            img = pygame.image.load(f"gameFiles/img/Check_mark.png")
+            screen.blit(img, (1610, 52))
 
         # input
         if Settings.input_device(self.self_settings) == 0:
@@ -147,9 +152,8 @@ class MainMenu:
 
     def check_buttons(self):
         if self.scene == 0:  # MainMenu
-            if 810 <= mouse[0] <= 1109 and 540 <= mouse[1] <= 651:  # Game
-                game = Game(self.self_settings, "levels/lvl1", [100, 500])
-                game.start()
+            if 810 <= mouse[0] <= 1109 and 540 <= mouse[1] <= 651:  # Pick Lvl
+                self.ChoiceMenu()
             if 1635 <= mouse[0] <= 1859 and 59 <= mouse[1] <= 132:  # Settings
                 self.SettingsMenu()
             if 31 <= mouse[0] <= 219 and 982 <= mouse[1] <= 1056:  # Authors
@@ -157,19 +161,22 @@ class MainMenu:
                 pass
             if 60 <= mouse[0] <= 134 and 59 <= mouse[1] <= 132:  # Exit
                 self.exit()
-        # elif self.scene == 1:  # ChoiceMenu
-        #    if 52 <= mouse[0] <= 150 and 56 <= mouse[1] <= 130:  # Back
-        #        self.MainMenu()
-        #    if 660 <= mouse[0] <= 1258 and 342 <= mouse[1] <= 452:  # LvL1
-        #        print("LvL1 Start")
-        #        game = Game(self.self_settings, "levels/lvl1", [100, 500])
-        #        game.start()
-        #    if 660 <= mouse[0] <= 1258 and 484 <= mouse[1] <= 595:  # LvL2
-        #        print("LvL2 Start")
-        #        game = Game(self.self_settings, "levels/lvl2", [100, 500])
-        #        game.start()
-        #    if 660 <= mouse[0] <= 1258 and 627 <= mouse[1] <= 737:  # Custom LvL
-        #        print("Custom LvL Start")
+        elif self.scene == 1:  # ChoiceMenu
+            if 52 <= mouse[0] <= 150 and 56 <= mouse[1] <= 130:  # Back
+                self.MainMenu()
+            if 660 <= mouse[0] <= 1258 and 342 <= mouse[1] <= 452:  # LvL1
+                print("LvL1 Start")
+                game = Game(self.self_settings, "levels/lvl1", [100, 500])
+                game.start()
+            if 660 <= mouse[0] <= 1258 and 484 <= mouse[1] <= 595:  # LvL2
+                print("LvL2 Start")
+                game = Game(self.self_settings, "levels/lvl2", [100, 500])
+                game.start()
+            if 660 <= mouse[0] <= 1258 and 627 <= mouse[1] <= 737:  # Custom LvL
+                if os.path.exists("levels/lvl3/lvl.json") and os.path.exists("levels/lvl3/lvl.mp3"):
+                    game = Game(self.self_settings, "levels/lvl3", [100, 500])
+                    game.start()
+                    print("Custom LvL Start")
         elif self.scene == 2:
             if 52 <= mouse[0] <= 151 and 56 <= mouse[1] <= 130:  # Back
                 self.MainMenu()
@@ -210,6 +217,9 @@ class MainMenu:
                     pygame.display.flip()
                     if Settings.change_key(self.self_settings, "Over"):
                         self.SettingsMenu()
+            elif 1610 <= mouse[0] <= 1640 and 52 <= mouse[1] <= 82:
+                if Settings.change_cheats(self.self_settings):
+                    self.SettingsMenu()
 
     def exit(self):
         sys.exit(0)
@@ -268,6 +278,19 @@ class Settings:
                 x = self.settings.get(f"gamepad{track}")
                 return x.upper()
 
+    def get_cheats(self):
+        return int(self.settings.get("cheats"))
+
+    def change_cheats(self):
+        print(int(self.settings.get("cheats")))
+        if int(self.settings.get("cheats")) == 0:
+            self.settings.set("cheats", 1)
+            return True
+        elif int(self.settings.get("cheats")) == 1:
+            self.settings.set("cheats", 0)
+            return True
+
+
     def change_key(self, track):
         if int(self.settings.get("input")) == 0:
             key = 0
@@ -277,6 +300,7 @@ class Settings:
                     if event.type == pygame.KEYDOWN:
                         key = pygame.key.name(event.key)
             self.settings.set(f"keyboard{track}", key)
+            return True
         elif int(self.settings.get("input")) == 1:
             key = None
             while key is None:
@@ -312,13 +336,14 @@ class Settings:
             elif key == 5:
                 key = "RB"
             self.settings.set(f"gamepad{track}", key)
-        return True
+            return True
 
 
 class Note(pygame.sprite.Sprite):
-    def __init__(self, game, track, index, time, i):
+    def __init__(self, game, track, index, time, i, BPM):
         super().__init__(game.all_sprites, game.notes_group)
         self.otl = 0
+        self.BPM = BPM
         if len(i[2]) > 1:
             self.image = pygame.image.load('gameFiles/img/note2.png')
             self.over = True
@@ -335,12 +360,12 @@ class Note(pygame.sprite.Sprite):
         elif track == 4:
             self.rect.x = 1539
 
-        self.rect.y = 1000 - (index * 1200 + time * 75)
+        self.rect.y = 1000 - (index * 2000 + time * 125)
         self.tochno = self.rect.y
         # print(self.rect.y)
 
     def update(self, dt):
-        self.tochno += float(5.9 * dt / 10)
+        self.tochno += float((self.BPM / 12) * dt / 10)
         self.rect.y = self.tochno
         # if self.otl < 4:
         #    self.rect.y += 6
@@ -400,14 +425,16 @@ class Game(MainMenu):
         self.font = pygame.font.Font("gameFiles\Inter-Bold.otf", 44)
         self.all_sprites = pygame.sprite.Group()
         self.notes_group = pygame.sprite.Group()
-        self.status_track = [False, False, False, False]
+        self.status_track = [0, 0, 0, 0]
 
     def draw(self):
         for i in range(4):
-            if self.status_track[i]:
+            if self.status_track[i] == 1:
                 self.colors[i] = '#ff0000'
-            else:
+            elif self.status_track[i] == 0:
                 self.colors[i] = '#00ff00'
+            elif self.status_track[i] == 2:
+                self.colors[i] = '#00ffff'
 
         pygame.draw.rect(screen, pygame.Color('#ffffff'), (304, 0, 100, 1080))
         pygame.draw.rect(screen, pygame.Color('#ffffff'), (708, 0, 100, 1080))
@@ -442,7 +469,7 @@ class Game(MainMenu):
         lvl = get_lvl.get_lvl(self.lvl_n + "/lvl.json")
         mixer.music.load(self.lvl_n + "/lvl.mp3")
         for i in lvl:
-            Note(self, int(i[2][0][4:]), i[0], i[1], i)
+            Note(self, int(i[2][0][4:]), i[0], i[1], i, i[3])
             # print(i)
         # no = Note(self, 3, 5, 8, ["line3", "1", ["line1"]])
         if int(self.setting.input_device()) == 0:
@@ -452,6 +479,8 @@ class Game(MainMenu):
         otsr = 0
         key = None
         gamepad_rtlt = 0
+        eim = self.setting.get_cheats()
+        self.eim = eim
         mixer.music.play()
         while running:
             for event in pygame.event.get():
@@ -465,7 +494,7 @@ class Game(MainMenu):
                         for i in range(1, 6):
                             if pygame.key.name(event.key).upper() == self.setting.get(i):
                                 if 1 <= i <= 4:
-                                    self.status_track[i - 1] = True
+                                    self.status_track[i - 1] = 1
                                     self.on_click(i)
                                 elif i == 5:
                                     self.counter.over = True
@@ -474,13 +503,13 @@ class Game(MainMenu):
                         for i in range(1, 5):
                             if pygame.key.name(event.key).upper() == self.setting.get(i):
                                 # self.colors[i - 1] = '#00ff00'
-                                self.status_track[i - 1] = False
+                                self.status_track[i - 1] = 0
 
                 elif input_d == 1:
                     if event.type == pygame.JOYBUTTONDOWN:
                         key = event.button
                     if event.type == pygame.JOYAXISMOTION:
-                        if event.axis == 4 and event.value >= 0 or event.axis == 5 and event.value >= 0:
+                        if event.axis == 4 and event.value == 1 or event.axis == 5 and event.value == 1:
                             if gamepad_rtlt == 0:
                                 if event.axis == 4:
                                     key = "LT"
@@ -513,11 +542,12 @@ class Game(MainMenu):
                     elif key == 5:
                         key = "RB"
                     for i in range(1, 5):
-                        self.status_track[i - 1] = False
+                        if self.status_track[i - 1] != 2:
+                            self.status_track[i - 1] = 0
                     for i in range(1, 6):
                         if key == self.setting.get(i):
                             if 1 <= i <= 4:
-                                self.status_track[i - 1] = True
+                                self.status_track[i - 1] = 1
                                 self.on_click(i)
                             elif i == 5:
                                 self.counter.over = True
@@ -532,10 +562,45 @@ class Game(MainMenu):
             else:
                 self.counter.over = False
 
+            for line in self.status_track:
+                if eim == 0 and line == 2:
+                    line = 0
+
             for note in self.notes_group:
+                if eim == 1 or eim == 2:
+                    if 925 < note.rect.y < 1100:
+                        if note.rect.x == 329:
+                            self.status_track[0] = 2
+                        elif note.rect.x == 733:
+                            self.status_track[1] = 2
+                        elif note.rect.x == 1136:
+                            self.status_track[2] = 2
+                        elif note.rect.x == 1539:
+                            self.status_track[3] = 2
+                if eim == 2:
+                    if 950 < note.rect.y < 1000:
+                        if note.rect.x == 329:
+                            self.on_click(1)
+                        elif note.rect.x == 733:
+                            self.on_click(2)
+                        elif note.rect.x == 1136:
+                            self.on_click(3)
+                        elif note.rect.x == 1539:
+                            self.on_click(4)
                 if note.rect.y > 1100:
                     note.kill()
                     self.counter.streak = [1, 0]
+                    if eim == 1 or eim == 2:
+                        if note.rect.x == 329:
+                            self.status_track[0] = 0
+                        elif note.rect.x == 733:
+                            self.status_track[1] = 0
+                        elif note.rect.x == 1136:
+                            self.status_track[2] = 0
+                        elif note.rect.x == 1539:
+                            self.status_track[3] = 0
+
+
 
             pygame.display.flip()
 
@@ -551,6 +616,7 @@ class Game(MainMenu):
             # print(no.rect.y)
         mixer.music.stop()
         self.savestat.save(self.counter.total, self.counter.max_streak, self.counter.over_claim)
+        scene_set(0)
         self.MainMenu()
 
     def on_click(self, track):
@@ -559,21 +625,37 @@ class Game(MainMenu):
                 if note.rect.y > 925 and note.rect.x == 329:
                     note.kill()
                     self.counter.claim(note.over)
+                    if self.eim == 1 or self.eim == 2:
+                        self.status_track[track - 1] = 0
+                    else:
+                        self.status_track[track - 1] = 2
                     return
             elif track == 2:
                 if note.rect.y > 925 and note.rect.x == 733:
                     note.kill()
                     self.counter.claim(note.over)
+                    if self.eim == 1 or self.eim == 2:
+                        self.status_track[track - 1] = 0
+                    else:
+                        self.status_track[track - 1] = 2
                     return
             elif track == 3:
                 if note.rect.y > 925 and note.rect.x == 1136:
                     note.kill()
                     self.counter.claim(note.over)
+                    if self.eim == 1 or self.eim == 2:
+                        self.status_track[track - 1] = 0
+                    else:
+                        self.status_track[track - 1] = 2
                     return
             elif track == 4:
                 if note.rect.y > 925 and note.rect.x == 1539:
                     note.kill()
                     self.counter.claim(note.over)
+                    if self.eim == 1 or self.eim == 2:
+                        self.status_track[track - 1] = 0
+                    else:
+                        self.status_track[track - 1] = 2
                     return
         self.counter.streak = [1, 0]
 
@@ -582,23 +664,35 @@ if __name__ == '__main__':
     if pygame.joystick.get_count() >= 2:
         print("Disconnect secont joystick")
         time.sleep(5)
-        exit(0)
+        exit()
     else:
         try:
             joystick = pygame.joystick.Joystick(0)
             joystick.init()
+            can_switch_input = True
         except Exception:
             s = Settings()
             Settings.input_device(s, 1, 0)
             print("Джостик не найден")
+            can_switch_input = False
     running = True
     window = MainMenu()
     window.MainMenu()
 
+    def scene_set(scene):
+        window.scene = scene
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == 27:
+                    if window.scene == 1:
+                        scene_set(0)
+                        window.MainMenu()
+                    elif window.scene == 2:
+                        scene_set(0)
+                        window.MainMenu()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse = pygame.mouse.get_pos()
                 # print(mouse)

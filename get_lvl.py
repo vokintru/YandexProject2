@@ -5,6 +5,7 @@ def get_lvl(file_name):
     list_ = []
     with open(file_name, "r", encoding="utf-8") as file:
         new = json.load(file)
+        BPM = new["tempo"]
         out = new["tracks"][0]["bars"]
 
     new_out = []
@@ -16,7 +17,7 @@ def get_lvl(file_name):
                 o2 = int(int(j["pos"]) / 100)
                 o_glob = o1 * 16 + o2
 
-                new_out.append((o1, o2, j["markers"]))
+                new_out.append((o1, o2, j["markers"], BPM))
     return new_out
 
 
