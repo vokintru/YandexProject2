@@ -1,3 +1,4 @@
+import random
 import sys
 import time
 import os
@@ -578,7 +579,7 @@ class Game(MainMenu):
                         elif note.rect.x == 1539:
                             self.status_track[3] = 2
                 if eim == 2:
-                    if 950 < note.rect.y < 1000:
+                    if random.randint(950, 1000) < note.rect.y < random.randint(1000, 1080):
                         if note.rect.x == 329:
                             self.on_click(1)
                         elif note.rect.x == 733:
