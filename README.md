@@ -3,7 +3,7 @@
 ### Компьютерная ритм игра - *Rhythm Rampage*, копия гитар хиро.
 *Управление в игре с клавиатуры и геймпада.* <br>
 
-[Как создать уровень]([https://github.com/Nikiton-prog](https://github.com/vokintru/YandexProject2/discussions/15)
+[Как создать уровень](https://github.com/vokintru/YandexProject2/discussions/15)
 
 ![gameFiles/img/icon.png](gameFiles/img/icon.png)
 
